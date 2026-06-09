@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Vata Promotions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:     #0e0c0a;
+      --surface:#171411;
+      --border: rgba(255,255,255,.09);
+      --cream:  #f5ede0;
+      --gold:   #b8976a;
+      --teal:   #2d6b68;
+      --teal-h: #235553;
+      --danger: #c94040;
+      --text:   rgba(245,237,224,.85);
+      --muted:  rgba(245,237,224,.42);
+    }
+
+    html, body {
+      min-height: 100dvh;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2.4rem;
+      background: rgba(14,12,10,.9); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar__logo { display: flex; align-items: center; gap: 1rem; }
+    .topbar__logo-text { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.3rem; font-weight: 300; letter-spacing: .22em; text-transform: uppercase; color: rgba(255,255,255,.55); }
+    .topbar__title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.1rem; font-weight: 300; letter-spacing: .04em;
+      color: var(--cream);
+    }
+    .topbar__title small {
+      display: block; font-size: .58rem; letter-spacing: .22em;
+      text-transform: uppercase; color: var(--gold); margin-bottom: .12rem;
+    }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .5rem 1.1rem; border-radius: 100px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--muted); font-size: .7rem; letter-spacing: .12em;
+      text-transform: uppercase; text-decoration: none;
+      transition: color .2s, border-color .2s;
+    }
+    .btn-back:hover { color: var(--cream); border-color: rgba(255,255,255,.25); }
+
+    /* ── LAYOUT ── */
+    .main {
+      max-width: 1100px; margin: 0 auto;
+      padding: 2.5rem 2rem 5rem;
+      display: flex; flex-direction: column; gap: 3rem;
+    }
+
+    .section-label {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.6rem; font-weight: 300; color: var(--cream);
+      margin-bottom: 1.5rem;
+    }
+    .section-label span { color: var(--gold); font-style: italic; }
+
+    /* ── FORM CARD ── */
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem 2.4rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+    }
+    .form-group { display: flex; flex-direction: column; gap: .5rem; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: .65rem; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--gold); font-weight: 400;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    textarea {
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--cream);
+      font-family: 'Inter', sans-serif;
+      font-size: .88rem;
+      padding: .75rem 1rem;
+      transition: border-color .2s, background .2s;
+      outline: none;
+      width: 100%;
+    }
+    input[type="text"]:focus,
+    input[type="date"]:focus,
+    textarea:focus {
+      border-color: var(--gold);
+      background: rgba(255,255,255,.08);
+    }
+    input[type="date"] { color-scheme: dark; }
+    textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+
+    /* Upload zone */
+    .upload-zone {
+      position: relative;
+      border: 1.5px dashed rgba(184,151,106,.35);
+      border-radius: 12px;
+      padding: 2rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .25s, background .25s;
+      background: rgba(255,255,255,.03);
+      overflow: hidden;
+    }
+    .upload-zone:hover,
+    .upload-zone.drag-over {
+      border-color: var(--gold);
+      background: rgba(184,151,106,.06);
+    }
+    .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .upload-icon { font-size: 1.5rem; margin-bottom: .5rem; color: var(--gold); }
+    .upload-zone p { font-size: .78rem; color: var(--muted); line-height: 1.5; }
+    .upload-zone p strong { color: var(--cream); font-weight: 500; }
+
+    .preview-wrap {
+      display: none;
+      position: relative;
+      width: 100%; aspect-ratio: 3/4;
+      border-radius: 10px; overflow: hidden;
+    }
+    .preview-wrap.visible { display: block; }
+    .preview-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-remove {
+      position: absolute; top: .5rem; right: .5rem;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(0,0,0,.7); border: none;
+      color: #fff; font-size: .85rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background .2s;
+    }
+    .preview-remove:hover { background: var(--danger); }
+
+    /* ── PUBLISH BUTTON ── */
+    .form-actions {
+      grid-column: 1 / -1;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: .8rem; gap: 1rem; flex-wrap: wrap;
+    }
+    .btn-publish {
+      display: inline-flex; align-items: center; gap: .7rem;
+      padding: .9rem 2.2rem; border-radius: 100px;
+      background: var(--teal); color: #fff; border: none;
+      font-size: .76rem; letter-spacing: .18em; text-transform: uppercase;
+      font-weight: 500; cursor: pointer;
+      transition: background .25s, transform .2s;
+    }
+    .btn-publish:hover { background: var(--teal-h); transform: translateY(-1px); }
+    .btn-publish:disabled { background: rgba(255,255,255,.1); color: rgba(255,255,255,.3); pointer-events: none; }
+    .btn-publish svg { width: 16px; height: 16px; fill: currentColor; }
+
+    .carousel-counter {
+      font-size: .7rem; color: var(--muted);
+    }
+    .carousel-counter strong { color: var(--cream); }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--teal); color: #fff;
+      font-size: .76rem; letter-spacing: .1em; padding: .75rem 1.6rem;
+      border-radius: 100px; white-space: nowrap;
+      transition: transform .4s cubic-bezier(.22,1,.36,1), opacity .4s;
+      opacity: 0; z-index: 200;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast.error { background: var(--danger); }
+
+    /* ── LIBRARY ── */
+    .library-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.2rem;
+    }
+    .lib-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+      display: flex; flex-direction: column;
+      transition: border-color .25s;
+    }
+    .lib-card:hover { border-color: rgba(255,255,255,.18); }
+    .lib-card.archived { opacity: .55; }
+
+    .lib-thumb {
+      width: 100%; aspect-ratio: 3/4;
+      overflow: hidden; flex-shrink: 0;
+      background: var(--bg);
+    }
+    .lib-thumb-inner {
+      width: 100%; height: 100%;
+      background-size: cover; background-position: center;
+    }
+    .lib-body { padding: .9rem 1rem; display: flex; flex-direction: column; gap: .35rem; flex: 1; }
+    .lib-title { font-size: .88rem; font-weight: 400; color: var(--cream); line-height: 1.3; }
+    .lib-dates { font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+
+    .lib-badges { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .2rem; }
+    .badge {
+      font-size: .52rem; letter-spacing: .16em; text-transform: uppercase;
+      padding: .22rem .6rem; border-radius: 100px;
+    }
+    .badge-active   { background: rgba(45,107,104,.75);  color: #fff; }
+    .badge-expired  { background: rgba(50,50,50,.8);     color: rgba(255,255,255,.45); }
+    .badge-upcoming { background: rgba(184,151,106,.75); color: #fff; }
+    .badge-carousel { background: rgba(255,255,255,.08); color: rgba(255,255,255,.55); border: 1px solid var(--border); }
+    .badge-archived { background: transparent; color: rgba(255,255,255,.3); border: 1px solid rgba(255,255,255,.12); }
+
+    .lib-actions { display: flex; gap: .5rem; padding: 0 1rem .9rem; }
+    .lib-btn {
+      flex: 1; padding: .45rem; border-radius: 6px; border: none;
+      font-size: .64rem; letter-spacing: .1em; text-transform: uppercase;
+      cursor: pointer; transition: background .2s, color .2s;
+    }
+    .lib-btn-restore { background: rgba(45,107,104,.2); color: var(--teal); }
+    .lib-btn-restore:hover { background: rgba(45,107,104,.35); }
+    .lib-btn-delete  { background: rgba(201,64,64,.15); color: #e07070; }
+    .lib-btn-delete:hover  { background: rgba(201,64,64,.28); }
+    .lib-btn-remove { background: rgba(255,255,255,.06); color: var(--muted); }
+    .lib-btn-remove:hover { background: rgba(255,255,255,.12); }
+
+    /* Library sections */
+    .lib-section-title {
+      grid-column: 1 / -1;
+      font-size: .62rem; letter-spacing: .22em; text-transform: uppercase;
+      color: var(--gold); padding: .2rem 0 .4rem;
+      border-bottom: 1px solid rgba(184,151,106,.2);
+      margin-bottom: .2rem;
+    }
+    .lib-section-sub {
+      grid-column: 1 / -1;
+      font-size: .65rem; color: var(--muted); font-style: italic;
+      margin-top: -.6rem; margin-bottom: .5rem;
+    }
+
+    .library-empty {
+      grid-column: 1 / -1;
+      padding: 3rem; text-align: center;
+      color: var(--muted); font-size: .9rem; font-style: italic;
+    }
+
+    /* Lien historique */
+    .btn-history {
+      display: inline-flex; align-items: center; gap: .4rem;
+      font-family: 'Inter', sans-serif;
+      font-size: .68rem; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--gold); text-decoration: none;
+      transition: opacity .2s;
+    }
+    .btn-history:hover { opacity: .7; }
+
+    /* ── SEPARATOR ── */
+    .sep { height: 1px; background: var(--border); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      .topbar { padding: .8rem 1.2rem; }
+      .main   { padding: 1.5rem 1rem 4rem; }
+      .form-card { padding: 1.4rem; }
+      .form-grid { grid-template-columns: 1fr; }
+      .topbar__title small { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar__logo">
+    <span class="topbar__logo-text">LOGO</span>
+    <div class="topbar__title">
+      <small>Tableau de bord</small>
+      Gestion des promotions
+    </div>
+  </div>
+  <a href="promotions.html" class="btn-back">
+    ← Voir la page publique
+  </a>
+</header>
+
+<main class="main">
+
+  <!-- ── AJOUTER UN FLYER ── -->
+  <section>
+    <h2 class="section-label">Ajouter un <span>flyer</span></h2>
+
+    <div class="form-card">
+      <div class="form-grid">
+
+        <!-- Upload image -->
+        <div class="form-group">
+          <label>Photo du flyer</label>
+          <div class="upload-zone" id="uploadZone">
+            <input type="file" id="fileInput" accept="image/*" />
+            <div class="upload-icon">🖼</div>
+            <p><strong>Cliquer pour choisir</strong><br>ou glisser-déposer une image<br><small style="color:rgba(255,255,255,.25)">JPG, PNG — max 5 Mo</small></p>
+          </div>
+          <div class="preview-wrap" id="previewWrap">
+            <img id="previewImg" src="" alt="Aperçu" />
+            <button class="preview-remove" id="removeImg" title="Supprimer l'image">✕</button>
+          </div>
+        </div>
+
+        <!-- Infos flyer -->
+        <div style="display:flex;flex-direction:column;gap:1.2rem;">
+          <div class="form-group">
+            <label for="flyerTitle">Nom du flyer</label>
+            <input type="text" id="flyerTitle" placeholder="Ex : Fête des Pères" maxlength="60" />
+          </div>
+          <div class="form-group">
+            <label for="startDate">Date de début</label>
+            <input type="date" id="startDate" />
+          </div>
+          <div class="form-group">
+            <label for="endDate">Date d'expiration</label>
+            <input type="date" id="endDate" />
+          </div>
+        </div>
+
+        <!-- Message WhatsApp -->
+        <div class="form-group full">
+          <label for="waMessage">Message WhatsApp pré-rempli</label>
+          <textarea id="waMessage" rows="4" placeholder="Le message sera auto-rempli ci-dessus…"></textarea>
+          <small style="font-size:.62rem;color:rgba(255,255,255,.3);margin-top:.3rem">
+            Ce texte sera envoyé automatiquement quand le client clique sur "Contacter sur WhatsApp".
+          </small>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+          <span class="carousel-counter" id="carouselCounter">— / 5 flyers dans le carrousel</span>
+          <button class="btn-publish" id="publishBtn">
+            <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+            Publier
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- ── CARROUSEL ACTUEL ── -->
+  <section>
+    <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:.8rem;margin-bottom:1.5rem;">
+      <h2 class="section-label" style="margin-bottom:0">Carrousel <span>actuel</span></h2>
+      <a href="historique.html" class="btn-history">
+        Voir tout l'historique
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></svg>
+      </a>
+    </div>
+    <div class="library-grid" id="libraryGrid"></div>
+  </section>
+
+</main>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ─────────────────────────────────────────
+     CONFIGURATION (même clé que promotions.html)
+  ───────────────────────────────────────── */
+  const STORAGE_KEY  = 'vata_promo_flyers';
+  const MAX_CAROUSEL = 5;
+
+  const GRADIENTS = [
+    'linear-gradient(145deg,#2d6b68 0%,#1a3d3b 100%)',
+    'linear-gradient(145deg,#b8976a 0%,#6b4a2a 100%)',
+    'linear-gradient(145deg,#4a2d6b 0%,#2d1a40 100%)',
+    'linear-gradient(145deg,#6b2d4a 0%,#3d1a2d 100%)',
+    'linear-gradient(145deg,#2d4a6b 0%,#1a2d40 100%)',
+    'linear-gradient(145deg,#5a6b2d 0%,#353d1a 100%)',
+  ];
+
+  /* ─────────────────────────────────────────
+     STORAGE
+  ───────────────────────────────────────── */
+  function getFlyers() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
+  }
+  function saveFlyers(arr) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  }
+
+  /* ─────────────────────────────────────────
+     UTILITAIRES
+  ───────────────────────────────────────── */
+  function today() { return new Date().toISOString().split('T')[0]; }
+
+  function getStatus(f) {
+    const t = today();
+    if (f.endDate < t)   return 'expired';
+    if (f.startDate > t) return 'upcoming';
+    return 'active';
+  }
+
+  function formatDate(d) {
+    if (!d) return '';
+    const [y, m, day] = d.split('-');
+    const mo = ['jan.','fév.','mars','avr.','mai','juin','juil.','août','sep.','oct.','nov.','déc.'];
+    return `${parseInt(day)} ${mo[parseInt(m)-1]} ${y}`;
+  }
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ─────────────────────────────────────────
+     TOAST
+  ───────────────────────────────────────── */
+  let toastTimer;
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className   = 'toast show' + (isError ? ' error' : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.className = 'toast'; }, 3200);
+  }
+
+  /* ─────────────────────────────────────────
+     IMAGE UPLOAD & COMPRESSION
+  ───────────────────────────────────────── */
+  let pendingImage = null; // base64 string or null
+
+  const uploadZone  = document.getElementById('uploadZone');
+  const fileInput   = document.getElementById('fileInput');
+  const previewWrap = document.getElementById('previewWrap');
+  const previewImg  = document.getElementById('previewImg');
+
+  function compressImage(file, maxW, maxH, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          const ratio = Math.min(maxW / w, maxH / h, 1);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleFile(file) {
+    if (!file.type.startsWith('image/')) { showToast('Format non supporté.', true); return; }
+    if (file.size > 5 * 1024 * 1024) { showToast('Image trop lourde (max 5 Mo).', true); return; }
+    try {
+      const b64 = await compressImage(file, 800, 1200, 0.82);
+      pendingImage = b64;
+      previewImg.src = b64;
+      previewWrap.classList.add('visible');
+      uploadZone.style.display = 'none';
+    } catch {
+      showToast('Erreur lors du chargement de l\'image.', true);
+    }
+  }
+
+  fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+  uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone.addEventListener('dragleave', ()  => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+
+  document.getElementById('removeImg').addEventListener('click', () => {
+    pendingImage = null;
+    previewImg.src = '';
+    previewWrap.classList.remove('visible');
+    uploadZone.style.display = '';
+    fileInput.value = '';
+  });
+
+  /* ─────────────────────────────────────────
+     AUTO-REMPLISSAGE DU MESSAGE
+  ───────────────────────────────────────── */
+  const titleInput = document.getElementById('flyerTitle');
+  const waTextarea = document.getElementById('waMessage');
+
+  titleInput.addEventListener('input', () => {
+    const title = titleInput.value.trim();
+    if (!title) return;
+    waTextarea.value =
+      `Bonjour, je suis intéressé(e) par votre offre "${title}" 🙏. Pourriez-vous me contacter pour plus d'informations ?`;
+  });
+
+  /* ─────────────────────────────────────────
+     COMPTEUR CARROUSEL
+  ───────────────────────────────────────── */
+  function refreshCounter() {
+    const inCarousel = getFlyers().filter(f => !f.archived).length;
+    document.getElementById('carouselCounter').innerHTML =
+      `<strong>${inCarousel}</strong> / ${MAX_CAROUSEL} flyers dans le carrousel`;
+  }
+
+  /* ─────────────────────────────────────────
+     PUBLICATION
+  ───────────────────────────────────────── */
+  document.getElementById('publishBtn').addEventListener('click', () => {
+    const title   = document.getElementById('flyerTitle').value.trim();
+    const start   = document.getElementById('startDate').value;
+    const end     = document.getElementById('endDate').value;
+    const message = document.getElementById('waMessage').value.trim();
+
+    if (!title)   { showToast('Veuillez saisir un nom de flyer.', true); return; }
+    if (!start)   { showToast('Veuillez choisir une date de début.', true); return; }
+    if (!end)     { showToast('Veuillez choisir une date d\'expiration.', true); return; }
+    if (end < start) { showToast('La date d\'expiration doit être après la date de début.', true); return; }
+    if (!message) { showToast('Veuillez saisir un message WhatsApp.', true); return; }
+
+    const all = getFlyers();
+
+    // Nouveau flyer
+    const idx    = all.length % GRADIENTS.length;
+    const newFlyer = {
+      id:            uid(),
+      title,
+      image:         pendingImage,
+      gradientIndex: idx,
+      startDate:     start,
+      endDate:       end,
+      message,
+      archived:      false,
+      createdAt:     new Date().toISOString(),
+    };
+
+    all.push(newFlyer);
+
+    // Rotation : si on dépasse MAX_CAROUSEL, archiver le plus ancien expiré
+    const inCarousel = all.filter(f => !f.archived);
+    if (inCarousel.length > MAX_CAROUSEL) {
+      const t = today();
+      const expiredSorted = inCarousel
+        .filter(f => f.endDate < t)
+        .sort((a, b) => a.endDate.localeCompare(b.endDate));
+
+      if (expiredSorted.length > 0) {
+        const toArchive = expiredSorted[0];
+        const idx2 = all.findIndex(f => f.id === toArchive.id);
+        if (idx2 !== -1) all[idx2].archived = true;
+      }
+      // Si aucun expiré, on dépasse quand même (on ne bloque pas l'ajout)
+    }
+
+    saveFlyers(all);
+    resetForm();
+    renderLibrary();
+    refreshCounter();
+    showToast('✓ Flyer publié avec succès !');
+  });
+
+  function resetForm() {
+    document.getElementById('flyerTitle').value = '';
+    document.getElementById('startDate').value  = '';
+    document.getElementById('endDate').value    = '';
+    document.getElementById('waMessage').value  = '';
+    pendingImage = null;
+    previewImg.src = '';
+    previewWrap.classList.remove('visible');
+    uploadZone.style.display = '';
+    fileInput.value = '';
+  }
+
+  /* ─────────────────────────────────────────
+     BIBLIOTHÈQUE
+  ───────────────────────────────────────── */
+  function makeLibCard(flyer) {
+    const status  = getStatus(flyer);
+    const labels  = { active: 'En cours', expired: 'Terminé', upcoming: 'Bientôt' };
+    const bgStyle = flyer.image
+      ? `background-image:url('${flyer.image}')`
+      : `background:${GRADIENTS[flyer.gradientIndex ?? 0]}`;
+
+    const card = document.createElement('div');
+    card.className = 'lib-card' + (flyer.archived ? ' archived' : '');
+    card.innerHTML = `
+      <div class="lib-thumb"><div class="lib-thumb-inner" style="${bgStyle}"></div></div>
+      <div class="lib-body">
+        <div class="lib-title">${escapeHtml(flyer.title)}</div>
+        <div class="lib-dates">${formatDate(flyer.startDate)} → ${formatDate(flyer.endDate)}</div>
+        <div class="lib-badges">
+          <span class="badge badge-${status}">${labels[status]}</span>
+        </div>
+      </div>
+      <div class="lib-actions">
+        ${flyer.archived
+          ? `<button class="lib-btn lib-btn-restore" data-id="${flyer.id}" data-action="restore">↑ Remettre</button>`
+          : `<button class="lib-btn lib-btn-remove"  data-id="${flyer.id}" data-action="archive">Archiver</button>`
+        }
+        <button class="lib-btn lib-btn-delete" data-id="${flyer.id}" data-action="delete">Supprimer</button>
+      </div>
+    `;
+    return card;
+  }
+
+  function renderLibrary() {
+    const grid   = document.getElementById('libraryGrid');
+    const active = getFlyers()
+      .filter(f => !f.archived)
+      .sort((a, b) => a.startDate.localeCompare(b.startDate));
+
+    grid.innerHTML = '';
+
+    if (!active.length) {
+      grid.innerHTML = '<p class="library-empty">Aucun flyer dans le carrousel. Publiez votre premier flyer ci-dessus !</p>';
+      return;
+    }
+
+    active.forEach(f => grid.appendChild(makeLibCard(f)));
+
+    // Délégation d'événements
+    grid.onclick = e => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const { id, action } = btn.dataset;
+      if (action === 'delete')  deleteFlyer(id);
+      if (action === 'archive') archiveFlyer(id);
+    };
+  }
+
+  function deleteFlyer(id) {
+    if (!confirm('Supprimer ce flyer définitivement ?')) return;
+    const all = getFlyers().filter(f => f.id !== id);
+    saveFlyers(all);
+    renderLibrary();
+    refreshCounter();
+    showToast('Flyer supprimé.');
+  }
+
+  function archiveFlyer(id) {
+    if (!confirm('Voulez-vous vraiment retirer ce flyer du carrousel ?')) return;
+    const all = getFlyers();
+    const idx = all.findIndex(f => f.id === id);
+    if (idx === -1) return;
+    all[idx].archived = true;
+    saveFlyers(all);
+    renderLibrary();
+    refreshCounter();
+    showToast('Flyer archivé (retiré du carrousel).');
+  }
+
+  function restoreFlyer(id) {
+    const all        = getFlyers();
+    const inCarousel = all.filter(f => !f.archived).length;
+    if (inCarousel >= MAX_CAROUSEL) {
+      showToast(`Le carrousel est plein (${MAX_CAROUSEL} flyers max). Archivez-en un d'abord.`, true);
+      return;
+    }
+    const idx = all.findIndex(f => f.id === id);
+    if (idx === -1) return;
+    all[idx].archived = false;
+    saveFlyers(all);
+    renderLibrary();
+    refreshCounter();
+    showToast('Flyer remis dans le carrousel.');
+  }
+
+  /* ── INIT ── */
+  renderLibrary();
+  refreshCounter();
+</script>
+</body>
+</html>

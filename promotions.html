@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Promotions — Vata Massage & Spa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:    #000;
+      --cream: #f5ede0;
+      --gold:  #b8976a;
+      --teal:  #2d6b68;
+    }
+
+    html, body {
+      height: 100%; overflow: hidden;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      background: var(--bg); color: var(--cream);
+    }
+
+    /* ── PAGE — 5 rangées ── */
+    .page {
+      height: 100dvh;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto auto;
+    }
+
+    /* ────────────────────────────────────────
+       NAVBAR — Admin gauche / Instagram droite
+    ──────────────────────────────────────── */
+    .top-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .6rem 1.1rem;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+
+    .admin-btn {
+      display: inline-flex; align-items: center; gap: .28rem;
+      padding: .3rem .8rem;
+      font-family: system-ui, sans-serif;
+      font-size: .58rem; letter-spacing: .12em; text-transform: uppercase; font-weight: 500;
+      color: rgba(255,255,255,.35); text-decoration: none;
+      border: 1px solid rgba(255,255,255,.16); border-radius: 100px;
+      transition: color .2s, border-color .2s;
+    }
+    .admin-btn svg { width: 10px; height: 10px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+    .admin-btn:hover { color: rgba(255,255,255,.72); border-color: rgba(255,255,255,.35); }
+
+    .ig-btn {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid rgba(255,255,255,.18);
+      color: rgba(255,255,255,.4); text-decoration: none;
+      transition: border-color .25s, color .25s;
+    }
+    .ig-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .ig-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ────────────────────────────────────────
+       HEADER — Logo + titre
+    ──────────────────────────────────────── */
+    .promo-header {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 1.1rem 2rem .3rem; text-align: center;
+    }
+
+    .logo-placeholder {
+      display: flex; flex-direction: column; align-items: center; gap: .18rem;
+      margin-bottom: 1rem;
+    }
+    .logo-placeholder__main {
+      font-size: 1.45rem; font-weight: 300; letter-spacing: .38em;
+      color: rgba(255,255,255,.48); text-transform: uppercase;
+    }
+    .logo-placeholder__sub {
+      font-size: .5rem; letter-spacing: .28em; text-transform: uppercase;
+      color: rgba(255,255,255,.17);
+    }
+
+    .eyebrow-row { display: flex; align-items: center; gap: .8rem; margin-bottom: .4rem; }
+    .eyebrow-row__line { width: 24px; height: 1px; background: var(--gold); }
+    .eyebrow-row__text { font-size: .54rem; letter-spacing: .26em; text-transform: uppercase; color: var(--gold); }
+
+    .promo-title {
+      font-size: clamp(1.9rem, 5vw, 4rem);
+      font-weight: 300; line-height: .95; color: #fff; letter-spacing: -.01em;
+    }
+    .promo-title em { font-style: italic; color: rgba(255,255,255,.72); }
+
+    /* ────────────────────────────────────────
+       SECTION CARROUSEL
+    ──────────────────────────────────────── */
+    .stack-section {
+      position: relative;
+      min-height: 0; overflow: hidden;
+    }
+    /* Fondu gauche/droite */
+    .stack-section::before,
+    .stack-section::after {
+      content: ''; position: absolute; top: 0; bottom: 0; z-index: 8; pointer-events: none;
+      width: clamp(50px, 10vw, 120px);
+    }
+    .stack-section::before { left:  0; background: linear-gradient(to right, #000 20%, transparent); }
+    .stack-section::after  { right: 0; background: linear-gradient(to left,  #000 20%, transparent); }
+
+    /* Viewport */
+    .stack-viewport {
+      perspective: 1100px;
+      perspective-origin: 50% 50%;
+      position: absolute; inset: 0;
+      overflow: hidden; cursor: grab;
+    }
+    .stack-viewport:active { cursor: grabbing; }
+    .stack-track { position: absolute; inset: 0; }
+
+    /* ── CARTES ── */
+    .flyer-card {
+      position: absolute;
+      width: 280px; height: 420px;
+      left: calc(50% - 140px);
+      top:  calc(50% - 210px);
+      border-radius: 20px; overflow: hidden;
+      background: #111; isolation: isolate;
+      transition: transform .46s cubic-bezier(.34,1.15,.64,1), opacity .38s ease;
+      will-change: transform, opacity;
+      cursor: pointer;
+    }
+
+    /* Stack horizontal */
+    .flyer-card[data-diff="-3"] { transform: translateX(-270px) scale(.54) rotateY(-20deg); opacity: 0;   pointer-events: none; z-index: 1; }
+    .flyer-card[data-diff="-2"] { transform: translateX(-192px) scale(.68) rotateY(-12deg); opacity: .72; z-index: 2; }
+    .flyer-card[data-diff="-1"] { transform: translateX(-108px) scale(.82) rotateY(-6deg);  opacity: 1;   z-index: 4; }
+    .flyer-card[data-diff="0"]  { transform: translateX(0)      scale(1)   rotateY(0deg);   opacity: 1;   z-index: 5;
+      box-shadow: 0 28px 70px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.07); }
+    .flyer-card[data-diff="1"]  { transform: translateX( 108px) scale(.82) rotateY(6deg);   opacity: 1;   z-index: 4; }
+    .flyer-card[data-diff="2"]  { transform: translateX( 192px) scale(.68) rotateY(12deg);  opacity: .72; z-index: 2; }
+    .flyer-card[data-diff="3"]  { transform: translateX( 270px) scale(.54) rotateY(20deg);  opacity: 0;   pointer-events: none; z-index: 1; }
+
+    .card-bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
+    .card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.85) 0%, rgba(0,0,0,.12) 52%, rgba(0,0,0,.04) 100%); }
+    .card-shimmer {
+      position: absolute; inset: 0; border-radius: inherit;
+      background: linear-gradient(110deg, transparent 35%, rgba(255,220,140,.16) 50%, transparent 65%);
+      background-size: 200% 100%; animation: shimmer 3.2s ease-in-out infinite;
+    }
+    @keyframes shimmer { 0%,100%{ background-position: -100% center } 50%{ background-position: 200% center } }
+
+    .card-content { position: absolute; bottom: 0; left: 0; right: 0; padding: .9rem 1.1rem; }
+    .card-title   { font-size: .95rem; font-weight: 400; color: #fff; line-height: 1.25; margin-bottom: .18rem; }
+    .card-dates   { font-size: .52rem; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.42); }
+
+    .card-badge {
+      position: absolute; top: .8rem; right: .8rem;
+      font-size: .5rem; letter-spacing: .15em; text-transform: uppercase;
+      padding: .22rem .55rem; border-radius: 100px; font-weight: 500;
+    }
+    .badge-active  { background: rgba(45,107,104,.9);  color: #fff; border: 1px solid rgba(255,255,255,.16); }
+    .badge-expired { background: rgba(35,35,35,.95);   color: rgba(255,255,255,.38); border: 1px solid rgba(255,255,255,.07); }
+    .badge-upcoming{ background: rgba(184,151,106,.88); color: #fff; border: 1px solid rgba(255,255,255,.14); }
+
+    .card--expired  .card-bg { filter: grayscale(1) brightness(.48); }
+    .card--upcoming .card-bg { filter: brightness(.78); }
+
+    /* Icône zoom sur la carte active */
+    .card-zoom-hint {
+      position: absolute; bottom: .65rem; right: .7rem;
+      width: 24px; height: 24px; border-radius: 50%;
+      background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.16);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .3s;
+    }
+    .flyer-card[data-diff="0"] .card-zoom-hint { opacity: 1; }
+    .card-zoom-hint svg { width: 10px; height: 10px; stroke: rgba(255,255,255,.68); fill: none; stroke-width: 2; stroke-linecap: round; }
+
+    /* ── FLÈCHES — juste sous la carte ── */
+    .arrows-bar {
+      position: absolute;
+      /* top = centre de la section + demi-hauteur carte + marge */
+      top: calc(50% + 222px);
+      left: 50%; transform: translateX(-50%);
+      display: flex; gap: 2.2rem; z-index: 20;
+    }
+    .nav-arrow {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+      color: #fff; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s, opacity .2s, transform .16s;
+    }
+    .nav-arrow:hover  { background: rgba(255,255,255,.22); }
+    .nav-arrow:active { transform: scale(.86); }
+    .nav-arrow.edge   { opacity: .15; pointer-events: none; }
+    .nav-arrow svg    { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── POINTS ── */
+    .dots-row {
+      display: flex; align-items: center; justify-content: center;
+      padding: .3rem 0 .1rem;
+    }
+    .stack-dots { display: flex; align-items: center; gap: .5rem; }
+    .dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: rgba(255,255,255,.2); border: none; padding: 0;
+      cursor: pointer; transition: background .3s, transform .3s;
+    }
+    .dot.active { background: var(--gold); transform: scale(1.5); }
+
+    /* ── CTA (pas un footer) ── */
+    .cta-section {
+      display: flex; flex-direction: column; align-items: center;
+      gap: .55rem; padding: .55rem 1.5rem max(1.4rem, env(safe-area-inset-bottom, 0px) + 1rem);
+    }
+    .flyer-info { text-align: center; }
+    #flyerTitle { font-size: clamp(.9rem, 2.2vw, 1.15rem); font-weight: 400; color: #fff; }
+    #flyerDates { font-size: .56rem; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.34); margin-top: .14rem; }
+
+    .btn-whatsapp {
+      display: inline-flex; align-items: center; gap: .6rem;
+      padding: .75rem 1.7rem; border-radius: 100px;
+      text-decoration: none; font-size: .68rem; letter-spacing: .14em; text-transform: uppercase;
+      font-weight: 500; transition: transform .25s, box-shadow .25s;
+    }
+    .btn-whatsapp svg { width: 16px; height: 16px; fill: currentColor; flex-shrink: 0; }
+    .btn-whatsapp.active-cta   { background: #25d366; color: #fff; }
+    .btn-whatsapp.active-cta:hover   { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(37,211,102,.35); }
+    .btn-whatsapp.upcoming-cta { background: var(--gold); color: #fff; }
+    .btn-whatsapp.upcoming-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(184,151,106,.38); }
+    .btn-whatsapp.expired-cta  { background: rgba(255,255,255,.07); color: rgba(255,255,255,.26); pointer-events: none; }
+
+    /* ── EMPTY ── */
+    .empty-state {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: 240px; height: 360px;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,.2); font-size: .85rem; font-style: italic;
+      text-align: center; padding: 2rem;
+      border: 1px dashed rgba(255,255,255,.1); border-radius: 20px;
+    }
+
+    /* ── LIGHTBOX ── */
+    .lightbox {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,.9);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem; opacity: 0; pointer-events: none;
+      transition: opacity .3s ease; cursor: zoom-out;
+    }
+    .lightbox.open { opacity: 1; pointer-events: all; }
+    .lightbox-inner {
+      position: relative;
+      height: min(88dvh, calc(78vw * 1.5));
+      width:  min(78vw,  calc(88dvh * 0.667));
+      border-radius: 18px; overflow: hidden;
+      background: #111; cursor: default;
+      transform: scale(.84);
+      transition: transform .42s cubic-bezier(.34,1.2,.64,1);
+      box-shadow: 0 48px 120px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.1);
+    }
+    .lightbox.open .lightbox-inner { transform: scale(1); }
+    .lightbox-bg   { position: absolute; inset: 0; background-size: cover; background-position: center; }
+    .lightbox-ov   { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.78) 0%, rgba(0,0,0,.04) 55%, transparent 100%); }
+    .lightbox-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.3rem 1.5rem; }
+    .lightbox-title { font-size: clamp(1rem, 3vw, 1.4rem); font-weight: 400; color: #fff; margin-bottom: .3rem; }
+    .lightbox-dates { font-size: .58rem; letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,.5); }
+    .lightbox-close {
+      position: absolute; top: .7rem; right: .7rem; z-index: 5;
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(0,0,0,.65); border: 1px solid rgba(255,255,255,.2);
+      color: #fff; font-size: .78rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s;
+    }
+    .lightbox-close:hover { background: rgba(10,10,10,.9); }
+    .lightbox-inner .card-shimmer {
+      position: absolute; inset: 0; border-radius: inherit;
+      background: linear-gradient(110deg, transparent 35%, rgba(255,220,140,.15) 50%, transparent 65%);
+      background-size: 200% 100%; animation: shimmer 3s ease-in-out infinite;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .flyer-card { width: 250px; height: 375px; left: calc(50% - 125px); top: calc(50% - 187px); }
+      .flyer-card[data-diff="-2"] { transform: translateX(-182px) scale(.68) rotateY(-12deg); }
+      .flyer-card[data-diff="-1"] { transform: translateX(-102px) scale(.82) rotateY(-6deg); }
+      .flyer-card[data-diff="1"]  { transform: translateX( 102px) scale(.82) rotateY(6deg); }
+      .flyer-card[data-diff="2"]  { transform: translateX( 182px) scale(.68) rotateY(12deg); }
+      .arrows-bar { top: calc(50% + 199px); }
+    }
+    @media (max-width: 600px) {
+      .promo-title { font-size: clamp(1.75rem, 7vw, 2.5rem); }
+      .promo-header { padding: .8rem 1rem .2rem; }
+      .logo-placeholder { margin-bottom: .7rem; }
+      .flyer-card { width: 210px; height: 315px; left: calc(50% - 105px); top: calc(50% - 157px); }
+      .flyer-card[data-diff="-2"] { transform: translateX(-154px) scale(.68) rotateY(-12deg); }
+      .flyer-card[data-diff="-1"] { transform: translateX(-86px) scale(.82) rotateY(-6deg); }
+      .flyer-card[data-diff="1"]  { transform: translateX( 86px) scale(.82) rotateY(6deg); }
+      .flyer-card[data-diff="2"]  { transform: translateX( 154px) scale(.68) rotateY(12deg); }
+      .arrows-bar { top: calc(50% + 169px); gap: 2rem; }
+      .cta-section { padding: .4rem 1rem max(1.1rem, env(safe-area-inset-bottom, 0px) + .8rem); gap: .4rem; }
+    }
+    @media (max-width: 380px) {
+      .flyer-card { width: 178px; height: 267px; left: calc(50% - 89px); top: calc(50% - 133px); }
+      .flyer-card[data-diff="-1"] { transform: translateX(-74px) scale(.82) rotateY(-6deg); }
+      .flyer-card[data-diff="1"]  { transform: translateX( 74px) scale(.82) rotateY(6deg); }
+      .arrows-bar { top: calc(50% + 145px); }
+    }
+    /* Écrans très courts (landscape mobile) */
+    @media (max-height: 620px) {
+      .logo-placeholder { margin-bottom: .4rem; }
+      .promo-header { padding: .5rem 1rem .1rem; }
+      .eyebrow-row { margin-bottom: .2rem; }
+      .promo-title { font-size: 1.5rem; }
+      .flyer-card { width: 180px; height: 270px; left: calc(50% - 90px); top: calc(50% - 135px); }
+      .flyer-card[data-diff="-1"] { transform: translateX(-76px) scale(.82) rotateY(-6deg); }
+      .flyer-card[data-diff="1"]  { transform: translateX( 76px) scale(.82) rotateY(6deg); }
+      .arrows-bar { top: calc(50% + 147px); }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── NAVBAR ── -->
+  <nav class="top-nav">
+    <a href="dashboard.html" class="admin-btn">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      Admin
+    </a>
+    <a class="ig-btn" id="igLink" href="#" target="_blank" rel="noopener" title="Instagram">
+      <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+    </a>
+  </nav>
+
+  <!-- ── HEADER ── -->
+  <header class="promo-header">
+    <div class="logo-placeholder">
+      <span class="logo-placeholder__main">L O G O</span>
+      <span class="logo-placeholder__sub">Votre entreprise</span>
+    </div>
+    <div class="eyebrow-row">
+      <span class="eyebrow-row__line"></span>
+      <span class="eyebrow-row__text">Massage &amp; Spa</span>
+      <span class="eyebrow-row__line"></span>
+    </div>
+    <h1 class="promo-title">Nos <em>Promotions</em></h1>
+  </header>
+
+  <!-- ── CARROUSEL ── -->
+  <section class="stack-section">
+    <div class="stack-viewport" id="stackViewport">
+      <div class="stack-track" id="stackTrack"></div>
+    </div>
+    <!-- Flèches juste sous la carte -->
+    <div class="arrows-bar">
+      <button class="nav-arrow" id="prevBtn" aria-label="Précédent">
+        <svg viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg>
+      </button>
+      <button class="nav-arrow" id="nextBtn" aria-label="Suivant">
+        <svg viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- ── POINTS ── -->
+  <div class="dots-row">
+    <div class="stack-dots" id="stackDots"></div>
+  </div>
+
+  <!-- ── CTA ── -->
+  <section class="cta-section">
+    <div class="flyer-info">
+      <h2 id="flyerTitle">—</h2>
+      <p id="flyerDates">—</p>
+    </div>
+    <a id="whatsappBtn" class="btn-whatsapp expired-cta" href="#">
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 .5C7.44.5.5 7.44.5 16c0 2.84.75 5.5 2.05 7.82L.5 31.5l7.88-2.04A15.44 15.44 0 0016 31.5C24.56 31.5 31.5 24.56 31.5 16S24.56.5 16 .5zm0 28.2a12.65 12.65 0 01-6.44-1.76l-.46-.28-4.68 1.22 1.24-4.56-.3-.48A12.7 12.7 0 1116 28.7zm7-9.06c-.38-.2-2.27-1.12-2.62-1.24-.35-.13-.6-.2-.86.2-.25.38-.98 1.24-1.2 1.5-.22.25-.44.28-.82.09-.38-.2-1.6-.59-3.04-1.88-1.12-1-1.88-2.24-2.1-2.62-.22-.38-.02-.58.16-.77.17-.17.38-.44.57-.66.19-.22.25-.38.38-.63.13-.25.06-.47-.03-.66-.1-.2-.86-2.07-1.18-2.83-.31-.74-.63-.64-.86-.65-.22-.01-.47-.01-.72-.01-.25 0-.66.09-.1.47-.35.38-1.32 1.29-1.32 3.14s1.35 3.64 1.54 3.9c.19.25 2.66 4.06 6.44 5.7.9.39 1.6.62 2.15.79.9.29 1.73.25 2.38.15.73-.11 2.27-.93 2.59-1.82.32-.9.32-1.67.22-1.83-.1-.16-.35-.25-.73-.44z"/>
+      </svg>
+      <span id="waBtnText">Contacter sur WhatsApp</span>
+    </a>
+  </section>
+
+</div>
+
+<!-- Lightbox zoom -->
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-inner" id="lightboxInner">
+    <div class="lightbox-bg" id="lightboxBg"></div>
+    <div class="lightbox-ov" id="lightboxOv"></div>
+    <div class="lightbox-info">
+      <div class="lightbox-title" id="lightboxTitle"></div>
+      <div class="lightbox-dates" id="lightboxDates"></div>
+    </div>
+    <button class="lightbox-close" id="lightboxClose">✕</button>
+  </div>
+</div>
+
+<script>
+  /* ─────────────────────────────────────────
+     CONFIG
+  ───────────────────────────────────────── */
+  const WHATSAPP_NUMBER = '33600000000'; // ← remplacer par le vrai numéro
+  const INSTAGRAM_URL   = '#';           // ← remplacer par l'URL Instagram
+  const STORAGE_KEY     = 'vata_promo_flyers';
+  const MAX_CAROUSEL    = 5;
+  const NAV_COOLDOWN    = 380;
+
+  document.getElementById('igLink').href = INSTAGRAM_URL;
+
+  /* ─────────────────────────────────────────
+     COULEURS PLACEHOLDER CARTES
+  ───────────────────────────────────────── */
+  const CARD_COLORS = [
+    '#3d1a10', /* terracotta */
+    '#0f1e2d', /* bleu nuit  */
+    '#3d2b0a', /* ambre      */
+    '#0d2d2b', /* teal       */
+    '#1e0d30', /* violet     */
+    '#222210', /* olive      */
+  ];
+
+  /* ─────────────────────────────────────────
+     STORAGE
+  ───────────────────────────────────────── */
+  function getFlyers() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
+  }
+  function today() { return new Date().toISOString().split('T')[0]; }
+  function getStatus(f) {
+    const t = today();
+    if (f.endDate < t)   return 'expired';
+    if (f.startDate > t) return 'upcoming';
+    return 'active';
+  }
+  function formatDate(d) {
+    if (!d) return '';
+    const [y, m, day] = d.split('-');
+    const mo = ['jan.','fév.','mars','avr.','mai','juin','juil.','août','sep.','oct.','nov.','déc.'];
+    return `${parseInt(day)} ${mo[parseInt(m)-1]} ${y}`;
+  }
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ─────────────────────────────────────────
+     DONNÉES DÉMO (5 flyers)
+  ───────────────────────────────────────── */
+  function initSampleData() {
+    if (getFlyers().length > 0) return;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([
+      { id:'d1', title:'Rituel Printemps',  image:null, gradientIndex:0, startDate:'2026-04-10', endDate:'2026-05-20',
+        message:'Bonjour, je suis intéressé(e) par votre offre "Rituel Printemps". Pourriez-vous m\'en dire plus ? 🙏',
+        archived:false, createdAt:'2026-04-05T10:00:00' },
+      { id:'d2', title:'Fête des Mères',    image:null, gradientIndex:1, startDate:'2026-05-22', endDate:'2026-06-05',
+        message:'Bonjour, je m\'intéresse à l\'offre Fête des Mères 🌸. Pouvez-vous me contacter ?',
+        archived:false, createdAt:'2026-05-18T10:00:00' },
+      { id:'d3', title:'Rituels d\'Été',    image:null, gradientIndex:2, startDate:'2026-06-01', endDate:'2026-06-30',
+        message:'Bonjour, je souhaite profiter de votre offre "Rituels d\'Été" ☀️. Quelles sont les disponibilités ?',
+        archived:false, createdAt:'2026-05-28T10:00:00' },
+      { id:'d4', title:'Fête des Pères',    image:null, gradientIndex:3, startDate:'2026-06-15', endDate:'2026-06-22',
+        message:'Bonjour, je m\'intéresse à l\'offre Fête des Pères 🎁. Pouvez-vous me contacter ?',
+        archived:false, createdAt:'2026-06-08T10:00:00' },
+      { id:'d5', title:'Pack Été 2026',     image:null, gradientIndex:4, startDate:'2026-07-01', endDate:'2026-08-31',
+        message:'Bonjour, je m\'intéresse à votre offre Pack Été 2026 🌴. Pourriez-vous m\'en dire plus ?',
+        archived:false, createdAt:'2026-06-09T10:00:00' },
+    ]));
+  }
+
+  /* ─────────────────────────────────────────
+     MOTEUR CARROUSEL
+  ───────────────────────────────────────── */
+  let currentIndex = 0;
+  let cards        = [];
+  let lastNavTime  = 0;
+
+  function buildCarousel() {
+    const all = getFlyers();
+    cards = all.filter(f => !f.archived).sort((a, b) => a.startDate.localeCompare(b.startDate));
+
+    if (!cards.length) { renderEmpty(); return; }
+
+    const activeIdx = cards.findIndex(f => getStatus(f) === 'active');
+    if (activeIdx >= 0) {
+      currentIndex = activeIdx;
+    } else {
+      const upcomingIdx = cards.findIndex(f => getStatus(f) === 'upcoming');
+      currentIndex = upcomingIdx >= 0 ? upcomingIdx : cards.length - 1;
+    }
+
+    renderCards();
+    renderDots();
+    updateCTA();
+    updateArrows();
+  }
+
+  function renderEmpty() {
+    document.getElementById('stackTrack').innerHTML =
+      '<div class="empty-state">Aucune promotion disponible.<br>Revenez bientôt !</div>';
+    document.getElementById('stackDots').innerHTML = '';
+    document.getElementById('flyerTitle').textContent = '—';
+    document.getElementById('flyerDates').textContent  = '—';
+    const btn = document.getElementById('whatsappBtn');
+    btn.className = 'btn-whatsapp expired-cta'; btn.href = '#';
+    document.getElementById('waBtnText').textContent = 'Aucune offre';
+  }
+
+  function renderCards() {
+    const track = document.getElementById('stackTrack');
+    track.innerHTML = '';
+    const labels = { active:'En cours', expired:'Terminé', upcoming:'Bientôt' };
+    cards.forEach((flyer, i) => {
+      const diff   = Math.max(-3, Math.min(3, i - currentIndex));
+      const status = getStatus(flyer);
+      const bgStyle = flyer.image
+        ? `background-image:url('${flyer.image}')`
+        : `background:${CARD_COLORS[flyer.gradientIndex ?? (i % CARD_COLORS.length)]}`;
+
+      const card = document.createElement('div');
+      card.className = `flyer-card card--${status}`;
+      card.dataset.diff  = diff;
+      card.dataset.index = i;
+      card.innerHTML = `
+        <div class="card-bg" style="${bgStyle}"></div>
+        ${status === 'upcoming' ? '<div class="card-shimmer"></div>' : ''}
+        <div class="card-overlay"></div>
+        <div class="card-content">
+          <div class="card-title">${esc(flyer.title)}</div>
+          <div class="card-dates">${formatDate(flyer.startDate)} — ${formatDate(flyer.endDate)}</div>
+        </div>
+        <span class="card-badge badge-${status}">${labels[status]}</span>
+        <div class="card-zoom-hint">
+          <svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><line x1="14.5" y1="14.5" x2="20" y2="20"/><line x1="10" y1="7" x2="10" y2="13"/><line x1="7" y1="10" x2="13" y2="10"/></svg>
+        </div>
+      `;
+      card.addEventListener('click', () => {
+        const d = i - currentIndex;
+        if (d === 0) { openLightbox(flyer, status); }
+        else         { navigate(d > 0 ? 1 : -1); }
+      });
+      track.appendChild(card);
+    });
+  }
+
+  function renderDots() {
+    const wrap = document.getElementById('stackDots');
+    wrap.innerHTML = '';
+    cards.forEach((_, i) => {
+      const d = document.createElement('button');
+      d.className = 'dot' + (i === currentIndex ? ' active' : '');
+      d.setAttribute('aria-label', `Flyer ${i + 1}`);
+      d.addEventListener('click', () => navigate(i - currentIndex));
+      wrap.appendChild(d);
+    });
+  }
+
+  function syncDOM() {
+    document.querySelectorAll('.flyer-card').forEach(card => {
+      const diff = Math.max(-3, Math.min(3, parseInt(card.dataset.index) - currentIndex));
+      card.dataset.diff = diff;
+    });
+    document.querySelectorAll('.dot').forEach((d, i) =>
+      d.classList.toggle('active', i === currentIndex)
+    );
+    updateCTA();
+    updateArrows();
+  }
+
+  function updateCTA() {
+    if (!cards.length) return;
+    const flyer  = cards[currentIndex];
+    const status = getStatus(flyer);
+    const btn    = document.getElementById('whatsappBtn');
+    const text   = document.getElementById('waBtnText');
+
+    document.getElementById('flyerTitle').textContent = flyer.title;
+    document.getElementById('flyerDates').textContent =
+      `Du ${formatDate(flyer.startDate)} au ${formatDate(flyer.endDate)}`;
+
+    if (status === 'active') {
+      btn.className = 'btn-whatsapp active-cta';
+      btn.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(flyer.message)}`;
+      btn.style.pointerEvents = ''; text.textContent = 'Contacter sur WhatsApp';
+    } else if (status === 'upcoming') {
+      btn.className = 'btn-whatsapp upcoming-cta';
+      btn.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(flyer.message)}`;
+      btn.style.pointerEvents = ''; text.textContent = 'Se renseigner';
+    } else {
+      btn.className = 'btn-whatsapp expired-cta';
+      btn.href = '#'; btn.style.pointerEvents = 'none'; text.textContent = 'Offre expirée';
+    }
+  }
+
+  /* ─────────────────────────────────────────
+     NAVIGATION
+  ───────────────────────────────────────── */
+  function navigate(delta) {
+    if (!cards.length) return;
+    const now = Date.now();
+    if (now - lastNavTime < NAV_COOLDOWN) return;
+    lastNavTime = now;
+    const next = currentIndex + delta;
+    if (next < 0 || next >= cards.length) return;
+    currentIndex = next;
+    syncDOM();
+  }
+
+  function updateArrows() {
+    if (!cards.length) {
+      document.getElementById('prevBtn').classList.add('edge');
+      document.getElementById('nextBtn').classList.add('edge');
+      return;
+    }
+    document.getElementById('prevBtn').classList.toggle('edge', currentIndex === 0);
+    document.getElementById('nextBtn').classList.toggle('edge', currentIndex === cards.length - 1);
+  }
+
+  const vp = document.getElementById('stackViewport');
+
+  vp.addEventListener('wheel', e => {
+    e.preventDefault();
+    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    if (Math.abs(delta) < 25) return;
+    navigate(delta > 0 ? 1 : -1);
+  }, { passive: false });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') navigate(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   navigate(-1);
+  });
+
+  let dragX = 0, dragging = false;
+  vp.addEventListener('mousedown',  e => { dragging = true; dragX = e.clientX; });
+  window.addEventListener('mouseup', e => {
+    if (!dragging) return; dragging = false;
+    const dx = dragX - e.clientX;
+    if (Math.abs(dx) > 45) navigate(dx > 0 ? 1 : -1);
+  });
+
+  let touchX = 0;
+  vp.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+  vp.addEventListener('touchend',   e => {
+    const dx = touchX - e.changedTouches[0].clientX;
+    if (Math.abs(dx) > 45) navigate(dx > 0 ? 1 : -1);
+  }, { passive: true });
+
+  document.getElementById('prevBtn').addEventListener('click', () => navigate(-1));
+  document.getElementById('nextBtn').addEventListener('click', () => navigate(1));
+
+  window.addEventListener('storage', e => { if (e.key === STORAGE_KEY) buildCarousel(); });
+
+  /* ─────────────────────────────────────────
+     LIGHTBOX
+  ───────────────────────────────────────── */
+  const lightbox      = document.getElementById('lightbox');
+  const lightboxBg    = document.getElementById('lightboxBg');
+  const lightboxOv    = document.getElementById('lightboxOv');
+  const lightboxTitle = document.getElementById('lightboxTitle');
+  const lightboxDates = document.getElementById('lightboxDates');
+  const lightboxInner = document.getElementById('lightboxInner');
+
+  function openLightbox(flyer, status) {
+    if (flyer.image) {
+      lightboxBg.style.background = '';
+      lightboxBg.style.backgroundImage   = `url('${flyer.image}')`;
+      lightboxBg.style.backgroundSize    = 'cover';
+      lightboxBg.style.backgroundPosition = 'center';
+    } else {
+      lightboxBg.style.backgroundImage = '';
+      lightboxBg.style.background = CARD_COLORS[flyer.gradientIndex ?? 0];
+    }
+    let shimmer = lightboxInner.querySelector('.card-shimmer');
+    if (status === 'upcoming') {
+      if (!shimmer) { shimmer = document.createElement('div'); shimmer.className = 'card-shimmer'; lightboxInner.insertBefore(shimmer, lightboxOv); }
+    } else { if (shimmer) shimmer.remove(); }
+    lightboxTitle.textContent = flyer.title;
+    lightboxDates.textContent = `Du ${formatDate(flyer.startDate)} au ${formatDate(flyer.endDate)}`;
+    lightbox.classList.add('open');
+  }
+  function closeLightbox() { lightbox.classList.remove('open'); }
+  document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+  /* ── INIT ── */
+  initSampleData();
+  buildCarousel();
+</script>
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vata Massage & Spa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --cream: #f5ede0;
+      --teal: #2d6b68;
+      --teal-h: #235553;
+      --gold: #b8976a;
+      --nav-txt: rgba(255,255,255,0.92);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      background: #0e0c0a;
+      overflow-x: hidden;
+    }
+
+    .hero {
+      position: relative; width: 100%;
+      height: 100dvh; min-height: 600px;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+
+    .hero__bg {
+      position: absolute; inset: 0;
+      background: url('image/hf_20260524_231825_d2e482ec-5002-4736-930b-9e74e919a8a8.png') center 30% / cover;
+      animation: bgR 1.8s cubic-bezier(.22,1,.36,1) forwards;
+    }
+    @keyframes bgR { from{transform:scale(1.08);opacity:.7} to{transform:scale(1);opacity:1} }
+
+    .hero__ov {
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(135deg,rgba(8,6,4,.62) 0%,rgba(8,6,4,.18) 60%,transparent 100%),
+        linear-gradient(to top,rgba(8,6,4,.70) 0%,rgba(8,6,4,.10) 55%,transparent 100%);
+    }
+    .hero__grain {
+      position: absolute; inset: 0; pointer-events: none;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E") repeat;
+      background-size: 128px; opacity: .45;
+    }
+
+    nav {
+      position: relative; z-index: 10;
+      display: grid; grid-template-columns: 1fr auto 1fr;
+      align-items: center; padding: 1rem 3rem;
+      animation: fD 1s .2s ease both;
+    }
+    @keyframes fD { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:none} }
+
+    .nav__links { display: flex; gap: 2.4rem; list-style: none; }
+    .nav__links a {
+      color: var(--nav-txt); text-decoration: none;
+      font-size: .82rem; letter-spacing: .14em; text-transform: uppercase;
+      transition: color .25s; position: relative;
+    }
+    .nav__links a::after { content:''; position:absolute; left:0; bottom:-3px; width:0; height:1px; background:var(--gold); transition:width .3s; }
+    .nav__links a:hover { color: var(--cream); }
+    .nav__links a:hover::after { width: 100%; }
+
+    .nav__logo { justify-self: center; }
+    .nav__logo img { height: 100px; mix-blend-mode: screen; }
+
+    .nav__right { justify-self: end; }
+    .nav__acc {
+      display: inline-flex; align-items: center; gap: .55rem;
+      padding: .5rem 1.1rem .5rem .7rem;
+      border: 1px solid rgba(255,255,255,.3); border-radius: 100px;
+      background: rgba(255,255,255,.08); backdrop-filter: blur(8px);
+      color: var(--nav-txt); text-decoration: none;
+      transition: background .25s, border-color .25s;
+    }
+    .nav__acc:hover { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.5); }
+    .nav__acc svg { width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+    .nav__acc span { font-size:.75rem; letter-spacing:.12em; text-transform:uppercase; }
+
+    .hero__c {
+      position: absolute; z-index: 5;
+      top: 50%; left: 190px; transform: translateY(-50%);
+      max-width: 640px; text-align: center;
+    }
+
+    .hero__ey { display:flex; align-items:center; justify-content:center; gap:1rem; margin-bottom:1.4rem; animation:fU .9s .55s ease both; }
+    .hero__eyl { width:36px; height:1px; background:var(--gold); }
+    .hero__eyt { font-size:.7rem; letter-spacing:.28em; text-transform:uppercase; color:var(--gold); }
+    @keyframes fU { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:none} }
+
+    .hero__h {
+      font-size: clamp(3.4rem,7.5vw,7.2rem);
+      font-weight: 300; line-height: .95; color: #fff;
+      text-transform: uppercase; letter-spacing: -.01em;
+      text-shadow: 0 4px 40px rgba(0,0,0,.3);
+      animation: fU 1s .72s ease both;
+    }
+    .hero__h em { font-style:normal; font-weight:300; color:var(--cream); }
+
+    .hero__sub {
+      margin-top: 1.5rem;
+      font-size: clamp(.75rem,1.4vw,.9rem);
+      letter-spacing: .22em; text-transform: uppercase;
+      color: rgba(245,237,224,.75); font-weight: 300;
+      animation: fU 1s .9s ease both;
+    }
+
+    @keyframes fI { from{opacity:0;transform:translateY(10px) scale(.97)} to{opacity:.6;transform:none} }
+    .hero__cta { margin-top:2.8rem; display:flex; justify-content:center; animation:fI 1.2s 1.8s cubic-bezier(.22,1,.36,1) both; }
+
+    .btn-book {
+      display:inline-flex; align-items:center; gap:.9rem;
+      padding:.95rem 2.2rem; background:var(--teal); opacity:.6;
+      color:#fff; font-size:.78rem; font-weight:500;
+      letter-spacing:.2em; text-transform:uppercase;
+      text-decoration:none; border-radius:100px;
+      border:1px solid rgba(255,255,255,.12);
+      transition:background .3s, transform .25s;
+    }
+    .btn-book:hover { background:var(--teal-h); transform:translateY(-2px); }
+    .btn-book__arr { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; background:rgba(255,255,255,.14); border-radius:50%; font-size:.9rem; transition:transform .25s; }
+    .btn-book:hover .btn-book__arr { transform:translateX(3px); }
+
+    .hero__corner { position:absolute; bottom:3.5rem; right:3.5rem; z-index:5; display:flex; flex-direction:column; align-items:flex-end; gap:.6rem; animation:fU 1s 1.2s ease both; }
+    .hero__corner-label { font-size:.6rem; letter-spacing:.3em; text-transform:uppercase; color:rgba(255,255,255,.4); writing-mode:vertical-rl; transform:rotate(180deg); }
+    .hero__corner-dots { display:flex; flex-direction:column; gap:5px; }
+    .hero__corner-dot { width:4px; height:4px; border-radius:50%; background:var(--gold); opacity:.6; }
+    .hero__corner-dot:last-child { opacity:1; }
+
+    .hero__scroll { position:absolute; bottom:2.5rem; left:50%; transform:translateX(-50%); z-index:5; display:flex; flex-direction:column; align-items:center; gap:.5rem; animation:fU 1s 1.4s ease both; }
+    .hero__scroll-lbl { font-size:.55rem; letter-spacing:.3em; text-transform:uppercase; color:rgba(255,255,255,.35); }
+    .hero__scroll-line { width:1px; height:40px; background:linear-gradient(to bottom,var(--gold),transparent); animation:sP 2s ease-in-out infinite; }
+    @keyframes sP { 0%,100%{opacity:.4} 50%{opacity:1} }
+
+    @media (max-width:768px) {
+      nav { padding:1rem 1.4rem; }
+      .nav__links { display:none; }
+      .hero__c { left:24px; right:24px; max-width:none; }
+      .hero__corner { display:none; }
+    }
+    @media (max-width:480px) { .hero__ey { display:none; } }
+
+    /* ── SECTION TEXTE ── */
+    .s-info {
+      background: #f5ede0;
+      position: relative;
+      padding: 96px 4rem 80px;
+      text-align: center;
+    }
+    .s-info__inner { max-width: 660px; margin: 0 auto; }
+
+    .ey { display:flex; align-items:center; justify-content:center; gap:1rem; margin-bottom:1.8rem; }
+    .ey__l { width:40px; height:1px; background:#b8976a; flex-shrink:0; }
+    .ey__t { font-size:.63rem; letter-spacing:.32em; text-transform:uppercase; color:#b8976a; }
+
+    .s-info blockquote {
+      font-size: clamp(1.15rem, 2.2vw, 1.6rem);
+      font-weight: 300; font-style: italic;
+      line-height: 1.7; color: #2a2218;
+      margin-bottom: 2.2rem;
+    }
+    .s-info__sig { display:flex; flex-direction:column; align-items:center; gap:.25rem; }
+    .s-info__name { font-size:.92rem; font-weight:400; letter-spacing:.06em; color:#2a2218; }
+    .s-info__role { font-size:.6rem; letter-spacing:.28em; text-transform:uppercase; color:#b8976a; }
+
+    .reveal { opacity:0; transform:translateY(26px); transition:opacity .9s ease, transform .9s ease; }
+    .reveal.in { opacity:1; transform:none; }
+
+    .wave { position:absolute; left:0; right:0; width:100%; line-height:0; z-index:5; pointer-events:none; }
+    .wave--bot { bottom:-1px; }
+    .wave svg { display:block; width:100%; }
+
+    .wave svg { display:block; width:100%; height:80px; }
+  </style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero__bg"></div>
+  <div class="hero__ov"></div>
+  <div class="hero__grain"></div>
+
+  <nav>
+    <ul class="nav__links">
+      <li><a href="#">Our Therapies</a></li>
+      <li><a href="#">Shop</a></li>
+      <li><a href="#">Our Story</a></li>
+      <li><a href="#">Contact Us</a></li>
+    </ul>
+    <div class="nav__logo">
+      <img src="image/logo.png" alt="Vata Massage & Spa" />
+    </div>
+    <div class="nav__right">
+      <a href="#" class="nav__acc">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span>Espace client</span>
+      </a>
+    </div>
+  </nav>
+
+  <div class="hero__c">
+    <div class="hero__ey">
+      <span class="hero__eyl"></span>
+      <span class="hero__eyt">Premium Wellness Studio</span>
+      <span class="hero__eyl"></span>
+    </div>
+    <h1 class="hero__h">Massage<br><em>Therapy</em><br>First</h1>
+    <p class="hero__sub">Because luxury is feeling good in your own skin</p>
+    <div class="hero__cta">
+      <a href="#" class="btn-book">
+        <span class="btn-book__arr">→</span>
+        Book Now
+      </a>
+    </div>
+  </div>
+
+  <div class="hero__corner">
+    <div class="hero__corner-dots">
+      <div class="hero__corner-dot"></div>
+      <div class="hero__corner-dot"></div>
+      <div class="hero__corner-dot"></div>
+    </div>
+    <span class="hero__corner-label">Est. 2024</span>
+  </div>
+  <div class="hero__scroll">
+    <span class="hero__scroll-lbl">Scroll</span>
+    <div class="hero__scroll-line"></div>
+  </div>
+
+  <div class="wave wave--bot">
+    <svg viewBox="0 0 1440 200" preserveAspectRatio="none">
+      <path d="M0,80 C300,0 700,180 1100,50 C1260,10 1380,100 1440,75 L1440,200 L0,200 Z" fill="#f5ede0"/>
+    </svg>
+  </div>
+</section>
+
+<!-- SECTION TEXTE -->
+<section class="s-info">
+  <div class="s-info__inner">
+    <div class="ey reveal">
+      <span class="ey__l"></span>
+      <span class="ey__t">Le mot de la fondatrice</span>
+      <span class="ey__l"></span>
+    </div>
+    <blockquote class="reveal" style="transition-delay:.15s">
+      « Le bien-être n'est pas un luxe, c'est une nécessité. Chaque soin que nous proposons
+      est pensé pour vous reconnecter à vous-même — dans un espace où le temps s'arrête
+      et où votre corps retrouve son équilibre naturel. »
+    </blockquote>
+    <div class="s-info__sig reveal" style="transition-delay:.28s">
+      <span class="s-info__name">Alexis Lobe</span>
+      <span class="s-info__role">Fondatrice & Thérapeute certifiée</span>
+    </div>
+  </div>
+</section>
+
+<script>
+  const obs = new IntersectionObserver(
+    entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); }),
+    { threshold: 0.14 }
+  );
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+
+</body>
+</html>
