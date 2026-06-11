@@ -315,7 +315,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 </head>
 <body>
 
@@ -363,7 +362,7 @@
           <div class="upload-zone" id="uploadZone">
             <input type="file" id="fileInput" accept="image/*" />
             <div class="upload-icon">🖼</div>
-            <p><strong>Cliquer pour choisir</strong><br>ou glisser-déposer une image<br><small>JPG, PNG — max 15 Mo</small></p>
+            <p><strong>Cliquer pour choisir</strong><br>ou glisser-déposer une image<br><small>JPG, PNG — max 32 Mo</small></p>
           </div>
           <div id="uploadProgress" style="display:none;margin-top:.6rem;">
             <div class="upload-progress"><div class="upload-progress-bar" id="uploadProgressBar"></div></div>
@@ -445,9 +444,8 @@
     appId:             '1:494746429610:web:e99dd435937403e10248d3'
   };
   firebase.initializeApp(firebaseConfig);
-  const db      = firebase.firestore();
-  const auth    = firebase.auth();
-  const storage = firebase.storage();
+  const db   = firebase.firestore();
+  const auth = firebase.auth();
 
   /* ─── CONFIG ─────────────────────────────────────────────────────────────── */
   const MAX_CAROUSEL = 5;
@@ -504,7 +502,9 @@
     toastTimer = setTimeout(() => { t.className = 'toast'; }, isError ? 6000 : 3200);
   }
 
-  /* ─── FIREBASE STORAGE UPLOAD ───────────────────────────────────────────── */
+  /* ─── IMGBB UPLOAD ──────────────────────────────────────────────────────── */
+  const IMGBB_KEY = 'IMGBB_API_KEY_PLACEHOLDER';
+
   let pendingImageUrl  = null;
   let uploadInProgress = false;
 
@@ -523,30 +523,30 @@
     reader.readAsDataURL(file);
   }
 
-  function uploadToStorage(file, onProgress) {
+  function uploadToImgBB(file, onProgress) {
     return new Promise((resolve, reject) => {
-      const ext = file.name.split('.').pop().toLowerCase();
-      const ref  = storage.ref(`flyers/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`);
-      const task = ref.put(file);
-      task.on('state_changed',
-        snap => {
-          const pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
-          onProgress(pct);
-        },
-        err => reject(err),
-        async () => {
-          try {
-            const url = await task.snapshot.ref.getDownloadURL();
-            resolve(url);
-          } catch (e) { reject(e); }
-        }
-      );
+      const fd = new FormData();
+      fd.append('image', file);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`);
+      xhr.upload.addEventListener('progress', e => {
+        if (e.lengthComputable) onProgress(Math.round(e.loaded / e.total * 100));
+      });
+      xhr.addEventListener('load', () => {
+        try {
+          const res = JSON.parse(xhr.responseText);
+          if (res.success) resolve(res.data.url);
+          else reject(new Error(res.error?.message || 'Clé API invalide'));
+        } catch { reject(new Error('Erreur ' + xhr.status)); }
+      });
+      xhr.addEventListener('error', () => reject(new Error('Erreur réseau')));
+      xhr.send(fd);
     });
   }
 
   async function handleFile(file) {
     if (!file.type.startsWith('image/')) { showToast('Format non supporté.', true); return; }
-    if (file.size > 15 * 1024 * 1024) { showToast('Image trop lourde (max 15 Mo).', true); return; }
+    if (file.size > 32 * 1024 * 1024) { showToast('Image trop lourde (max 32 Mo).', true); return; }
     pendingImageUrl = null;
     showPreview(file);
 
@@ -559,7 +559,7 @@
     uploadInProgress   = true;
 
     try {
-      pendingImageUrl = await uploadToStorage(file, pct => {
+      pendingImageUrl = await uploadToImgBB(file, pct => {
         bar.style.width = pct + '%';
         txt.textContent = `Upload ${pct}%…`;
       });
@@ -568,10 +568,7 @@
       txt.textContent      = '✓ Image prête';
       setTimeout(() => { progressWrap.style.display = 'none'; }, 1800);
     } catch (e) {
-      const msg = e.code === 'storage/unauthorized'
-        ? 'Accès refusé — règles Firebase Storage à configurer.'
-        : (e.message || 'Erreur inconnue');
-      showToast('Upload : ' + msg, true);
+      showToast('Upload : ' + (e.message || 'Erreur inconnue'), true);
       progressWrap.style.display = 'none';
       pendingImageUrl = null;
     } finally {
