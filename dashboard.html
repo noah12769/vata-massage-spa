@@ -298,8 +298,28 @@
       .topbar__title small { display: none; }
     }
   </style>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 </head>
 <body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#1e5a40;z-index:1000;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;padding:2rem;">
+  <img src="image/logo.png" style="height:80px;width:auto;" alt="Vata" />
+  <div style="background:#fff;border-radius:16px;padding:2rem 2.4rem;width:100%;max-width:360px;display:flex;flex-direction:column;gap:1rem;">
+    <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:300;font-size:1.5rem;color:#1a1a1a;margin-bottom:.3rem;">Connexion</h2>
+    <input type="email" id="loginEmail" placeholder="Email" autocomplete="username"
+      style="background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.1);border-radius:8px;color:#1a1a1a;font-family:'Inter',sans-serif;font-size:.9rem;padding:.75rem 1rem;outline:none;width:100%;box-sizing:border-box;" />
+    <input type="password" id="loginPassword" placeholder="Mot de passe" autocomplete="current-password"
+      style="background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.1);border-radius:8px;color:#1a1a1a;font-family:'Inter',sans-serif;font-size:.9rem;padding:.75rem 1rem;outline:none;width:100%;box-sizing:border-box;" />
+    <button id="loginBtn" style="background:#1e5a40;color:#fff;border:none;border-radius:100px;padding:.9rem 2rem;font-family:'Inter',sans-serif;font-size:.76rem;letter-spacing:.18em;text-transform:uppercase;font-weight:500;cursor:pointer;">Se connecter</button>
+    <div id="loginError" style="display:none;color:#c94040;font-size:.78rem;text-align:center;"></div>
+  </div>
+</div>
+
+<div id="dashboardContent" style="display:none">
 
 <!-- TOPBAR -->
 <header class="topbar">
@@ -310,9 +330,10 @@
       Gestion des promotions
     </div>
   </div>
-  <a href="index.html" class="btn-back">
-    ← Voir la page publique
-  </a>
+  <div style="display:flex;gap:.8rem;align-items:center;">
+    <a href="index.html" class="btn-back">← Voir la page publique</a>
+    <button id="logoutBtn" class="btn-back" style="cursor:pointer;border:none;">Déconnexion</button>
+  </div>
 </header>
 
 <main class="main">
@@ -395,13 +416,26 @@
 <!-- Toast notification -->
 <div class="toast" id="toast"></div>
 
-<script>
-  /* ─────────────────────────────────────────
-     CONFIGURATION (même clé que promotions.html)
-  ───────────────────────────────────────── */
-  const STORAGE_KEY  = 'vata_promo_flyers';
-  const MAX_CAROUSEL = 5;
+</div><!-- #dashboardContent -->
 
+<script>
+  /* ─── FIREBASE ──────────────────────────────────────────────────────────── */
+  // Remplace avec ton firebaseConfig depuis console.firebase.google.com
+  const firebaseConfig = {
+    apiKey:            'REMPLACE_MOI',
+    authDomain:        'REMPLACE_MOI.firebaseapp.com',
+    projectId:         'REMPLACE_MOI',
+    storageBucket:     'REMPLACE_MOI.appspot.com',
+    messagingSenderId: 'REMPLACE_MOI',
+    appId:             'REMPLACE_MOI'
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db      = firebase.firestore();
+  const storage = firebase.storage();
+  const auth    = firebase.auth();
+
+  /* ─── CONFIG ─────────────────────────────────────────────────────────────── */
+  const MAX_CAROUSEL = 5;
   const GRADIENTS = [
     'linear-gradient(145deg,#2d6b68 0%,#1a3d3b 100%)',
     'linear-gradient(145deg,#b8976a 0%,#6b4a2a 100%)',
@@ -411,20 +445,18 @@
     'linear-gradient(145deg,#5a6b2d 0%,#353d1a 100%)',
   ];
 
-  /* ─────────────────────────────────────────
-     STORAGE
-  ───────────────────────────────────────── */
-  function getFlyers() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-    catch { return []; }
-  }
-  function saveFlyers(arr) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  /* ─── FIRESTORE ──────────────────────────────────────────────────────────── */
+  async function getFlyers() {
+    try {
+      const snap = await db.collection('flyers').orderBy('startDate').get();
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (e) {
+      console.warn('Firebase:', e.message);
+      return [];
+    }
   }
 
-  /* ─────────────────────────────────────────
-     UTILITAIRES
-  ───────────────────────────────────────── */
+  /* ─── UTILITAIRES ────────────────────────────────────────────────────────── */
   function today() { return new Date().toISOString().split('T')[0]; }
 
   function getStatus(f) {
@@ -441,17 +473,13 @@
     return `${parseInt(day)} ${mo[parseInt(m)-1]} ${y}`;
   }
 
-  function uid() {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-  }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
   function escapeHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  /* ─────────────────────────────────────────
-     TOAST
-  ───────────────────────────────────────── */
+  /* ─── TOAST ──────────────────────────────────────────────────────────────── */
   let toastTimer;
   function showToast(msg, isError = false) {
     const t = document.getElementById('toast');
@@ -461,17 +489,15 @@
     toastTimer = setTimeout(() => { t.className = 'toast'; }, 3200);
   }
 
-  /* ─────────────────────────────────────────
-     IMAGE UPLOAD & COMPRESSION
-  ───────────────────────────────────────── */
-  let pendingImage = null; // base64 string or null
+  /* ─── IMAGE UPLOAD ───────────────────────────────────────────────────────── */
+  let pendingImage = null; // { dataUrl, blob } ou null
 
   const uploadZone  = document.getElementById('uploadZone');
   const fileInput   = document.getElementById('fileInput');
   const previewWrap = document.getElementById('previewWrap');
   const previewImg  = document.getElementById('previewImg');
 
-  function compressImage(file, maxW, maxH, quality) {
+  function processImage(file, maxW, maxH, quality) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = e => {
@@ -479,12 +505,15 @@
         img.onload = () => {
           let w = img.width, h = img.height;
           const ratio = Math.min(maxW / w, maxH / h, 1);
-          w = Math.round(w * ratio);
-          h = Math.round(h * ratio);
+          w = Math.round(w * ratio); h = Math.round(h * ratio);
           const canvas = document.createElement('canvas');
           canvas.width = w; canvas.height = h;
           canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          resolve(canvas.toDataURL('image/jpeg', quality));
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          canvas.toBlob(blob => {
+            if (!blob) { reject(new Error('toBlob failed')); return; }
+            resolve({ dataUrl, blob });
+          }, 'image/jpeg', quality);
         };
         img.onerror = reject;
         img.src = e.target.result;
@@ -498,111 +527,96 @@
     if (!file.type.startsWith('image/')) { showToast('Format non supporté.', true); return; }
     if (file.size > 5 * 1024 * 1024) { showToast('Image trop lourde (max 5 Mo).', true); return; }
     try {
-      const b64 = await compressImage(file, 800, 1200, 0.82);
-      pendingImage = b64;
-      previewImg.src = b64;
+      pendingImage = await processImage(file, 800, 1200, 0.82);
+      previewImg.src = pendingImage.dataUrl;
       previewWrap.classList.add('visible');
       uploadZone.style.display = 'none';
-    } catch {
-      showToast('Erreur lors du chargement de l\'image.', true);
-    }
+    } catch { showToast('Erreur lors du chargement de l\'image.', true); }
   }
 
   fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
-
   uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
   uploadZone.addEventListener('dragleave', ()  => uploadZone.classList.remove('drag-over'));
   uploadZone.addEventListener('drop', e => {
-    e.preventDefault();
-    uploadZone.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
+    e.preventDefault(); uploadZone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
   });
-
   document.getElementById('removeImg').addEventListener('click', () => {
-    pendingImage = null;
-    previewImg.src = '';
-    previewWrap.classList.remove('visible');
-    uploadZone.style.display = '';
-    fileInput.value = '';
+    pendingImage = null; previewImg.src = '';
+    previewWrap.classList.remove('visible'); uploadZone.style.display = ''; fileInput.value = '';
   });
 
-  /* ─────────────────────────────────────────
-     AUTO-REMPLISSAGE DU MESSAGE
-  ───────────────────────────────────────── */
-  const titleInput = document.getElementById('flyerTitle');
-  const waTextarea = document.getElementById('waMessage');
-
-  titleInput.addEventListener('input', () => {
-    const title = titleInput.value.trim();
+  /* ─── AUTO-MESSAGE ───────────────────────────────────────────────────────── */
+  document.getElementById('flyerTitle').addEventListener('input', () => {
+    const title = document.getElementById('flyerTitle').value.trim();
     if (!title) return;
-    waTextarea.value =
+    document.getElementById('waMessage').value =
       `Bonjour, je suis intéressé(e) par votre offre "${title}" 🙏. Pourriez-vous me contacter pour plus d'informations ?`;
   });
 
-  /* ─────────────────────────────────────────
-     COMPTEUR CARROUSEL
-  ───────────────────────────────────────── */
-  function refreshCounter() {
-    const inCarousel = getFlyers().filter(f => !f.archived).length;
+  /* ─── COMPTEUR ───────────────────────────────────────────────────────────── */
+  async function refreshCounter() {
+    const all = await getFlyers();
+    const n = all.filter(f => !f.archived).length;
     document.getElementById('carouselCounter').innerHTML =
-      `<strong>${inCarousel}</strong> / ${MAX_CAROUSEL} flyers dans le carrousel`;
+      `<strong>${n}</strong> / ${MAX_CAROUSEL} flyers dans le carrousel`;
   }
 
-  /* ─────────────────────────────────────────
-     PUBLICATION
-  ───────────────────────────────────────── */
-  document.getElementById('publishBtn').addEventListener('click', () => {
+  /* ─── PUBLICATION ────────────────────────────────────────────────────────── */
+  document.getElementById('publishBtn').addEventListener('click', async () => {
+    const btn     = document.getElementById('publishBtn');
     const title   = document.getElementById('flyerTitle').value.trim();
     const start   = document.getElementById('startDate').value;
     const end     = document.getElementById('endDate').value;
     const message = document.getElementById('waMessage').value.trim();
 
-    if (!title)   { showToast('Veuillez saisir un nom de flyer.', true); return; }
-    if (!start)   { showToast('Veuillez choisir une date de début.', true); return; }
-    if (!end)     { showToast('Veuillez choisir une date d\'expiration.', true); return; }
+    if (!title)      { showToast('Veuillez saisir un nom de flyer.', true); return; }
+    if (!start)      { showToast('Veuillez choisir une date de début.', true); return; }
+    if (!end)        { showToast('Veuillez choisir une date d\'expiration.', true); return; }
     if (end < start) { showToast('La date d\'expiration doit être après la date de début.', true); return; }
-    if (!message) { showToast('Veuillez saisir un message WhatsApp.', true); return; }
+    if (!message)    { showToast('Veuillez saisir un message WhatsApp.', true); return; }
 
-    const all = getFlyers();
+    btn.disabled = true;
+    btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg> Publication…`;
 
-    // Nouveau flyer
-    const idx    = all.length % GRADIENTS.length;
-    const newFlyer = {
-      id:            uid(),
-      title,
-      image:         pendingImage,
-      gradientIndex: idx,
-      startDate:     start,
-      endDate:       end,
-      message,
-      archived:      false,
-      createdAt:     new Date().toISOString(),
-    };
+    try {
+      const all = await getFlyers();
+      const inCarousel = all.filter(f => !f.archived);
+      const gradientIdx = all.length % GRADIENTS.length;
+      const flyerId = uid();
 
-    all.push(newFlyer);
-
-    // Rotation : si on dépasse MAX_CAROUSEL, archiver le plus ancien expiré
-    const inCarousel = all.filter(f => !f.archived);
-    if (inCarousel.length > MAX_CAROUSEL) {
-      const t = today();
-      const expiredSorted = inCarousel
-        .filter(f => f.endDate < t)
-        .sort((a, b) => a.endDate.localeCompare(b.endDate));
-
-      if (expiredSorted.length > 0) {
-        const toArchive = expiredSorted[0];
-        const idx2 = all.findIndex(f => f.id === toArchive.id);
-        if (idx2 !== -1) all[idx2].archived = true;
+      let imageUrl = null;
+      if (pendingImage) {
+        const ref = storage.ref(`flyers/${flyerId}/image.jpg`);
+        await ref.put(pendingImage.blob);
+        imageUrl = await ref.getDownloadURL();
       }
-      // Si aucun expiré, on dépasse quand même (on ne bloque pas l'ajout)
-    }
 
-    saveFlyers(all);
-    resetForm();
-    renderLibrary();
-    refreshCounter();
-    showToast('✓ Flyer publié avec succès !');
+      await db.collection('flyers').doc(flyerId).set({
+        title, image: imageUrl, gradientIndex: gradientIdx,
+        startDate: start, endDate: end, message,
+        archived: false, createdAt: new Date().toISOString()
+      });
+
+      if (inCarousel.length >= MAX_CAROUSEL) {
+        const t = today();
+        const expired = inCarousel.filter(f => f.endDate < t)
+          .sort((a, b) => a.endDate.localeCompare(b.endDate));
+        if (expired.length > 0)
+          await db.collection('flyers').doc(expired[0].id).update({ archived: true });
+      }
+
+      resetForm();
+      await renderLibrary();
+      await refreshCounter();
+      showToast('✓ Flyer publié avec succès !');
+    } catch (e) {
+      showToast('Erreur lors de la publication. Réessayez.', true);
+      console.error(e);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg> Publier`;
+    }
   });
 
   function resetForm() {
@@ -610,16 +624,11 @@
     document.getElementById('startDate').value  = '';
     document.getElementById('endDate').value    = '';
     document.getElementById('waMessage').value  = '';
-    pendingImage = null;
-    previewImg.src = '';
-    previewWrap.classList.remove('visible');
-    uploadZone.style.display = '';
-    fileInput.value = '';
+    pendingImage = null; previewImg.src = '';
+    previewWrap.classList.remove('visible'); uploadZone.style.display = ''; fileInput.value = '';
   }
 
-  /* ─────────────────────────────────────────
-     BIBLIOTHÈQUE
-  ───────────────────────────────────────── */
+  /* ─── BIBLIOTHÈQUE ───────────────────────────────────────────────────────── */
   function makeLibCard(flyer) {
     const status  = getStatus(flyer);
     const labels  = { active: 'En cours', expired: 'Terminé', upcoming: 'Bientôt' };
@@ -634,9 +643,7 @@
       <div class="lib-body">
         <div class="lib-title">${escapeHtml(flyer.title)}</div>
         <div class="lib-dates">${formatDate(flyer.startDate)} → ${formatDate(flyer.endDate)}</div>
-        <div class="lib-badges">
-          <span class="badge badge-${status}">${labels[status]}</span>
-        </div>
+        <div class="lib-badges"><span class="badge badge-${status}">${labels[status]}</span></div>
       </div>
       <div class="lib-actions">
         ${flyer.archived
@@ -649,71 +656,93 @@
     return card;
   }
 
-  function renderLibrary() {
-    const grid   = document.getElementById('libraryGrid');
-    const active = getFlyers()
-      .filter(f => !f.archived)
+  async function renderLibrary() {
+    const grid = document.getElementById('libraryGrid');
+    grid.innerHTML = '<p class="library-empty">Chargement…</p>';
+    const active = (await getFlyers()).filter(f => !f.archived)
       .sort((a, b) => a.startDate.localeCompare(b.startDate));
 
     grid.innerHTML = '';
-
     if (!active.length) {
       grid.innerHTML = '<p class="library-empty">Aucun flyer dans le carrousel. Publiez votre premier flyer ci-dessus !</p>';
       return;
     }
-
     active.forEach(f => grid.appendChild(makeLibCard(f)));
 
-    // Délégation d'événements
     grid.onclick = e => {
       const btn = e.target.closest('[data-action]');
       if (!btn) return;
       const { id, action } = btn.dataset;
       if (action === 'delete')  deleteFlyer(id);
       if (action === 'archive') archiveFlyer(id);
+      if (action === 'restore') restoreFlyer(id);
     };
   }
 
-  function deleteFlyer(id) {
+  async function deleteFlyer(id) {
     if (!confirm('Supprimer ce flyer définitivement ?')) return;
-    const all = getFlyers().filter(f => f.id !== id);
-    saveFlyers(all);
-    renderLibrary();
-    refreshCounter();
-    showToast('Flyer supprimé.');
+    try {
+      try { await storage.ref(`flyers/${id}/image.jpg`).delete(); } catch (_) {}
+      await db.collection('flyers').doc(id).delete();
+      await renderLibrary(); await refreshCounter();
+      showToast('Flyer supprimé.');
+    } catch { showToast('Erreur lors de la suppression.', true); }
   }
 
-  function archiveFlyer(id) {
+  async function archiveFlyer(id) {
     if (!confirm('Voulez-vous vraiment retirer ce flyer du carrousel ?')) return;
-    const all = getFlyers();
-    const idx = all.findIndex(f => f.id === id);
-    if (idx === -1) return;
-    all[idx].archived = true;
-    saveFlyers(all);
-    renderLibrary();
-    refreshCounter();
+    await db.collection('flyers').doc(id).update({ archived: true });
+    await renderLibrary(); await refreshCounter();
     showToast('Flyer archivé (retiré du carrousel).');
   }
 
-  function restoreFlyer(id) {
-    const all        = getFlyers();
-    const inCarousel = all.filter(f => !f.archived).length;
-    if (inCarousel >= MAX_CAROUSEL) {
+  async function restoreFlyer(id) {
+    const all = await getFlyers();
+    if (all.filter(f => !f.archived).length >= MAX_CAROUSEL) {
       showToast(`Le carrousel est plein (${MAX_CAROUSEL} flyers max). Archivez-en un d'abord.`, true);
       return;
     }
-    const idx = all.findIndex(f => f.id === id);
-    if (idx === -1) return;
-    all[idx].archived = false;
-    saveFlyers(all);
-    renderLibrary();
-    refreshCounter();
+    await db.collection('flyers').doc(id).update({ archived: false });
+    await renderLibrary(); await refreshCounter();
     showToast('Flyer remis dans le carrousel.');
   }
 
-  /* ── INIT ── */
-  renderLibrary();
-  refreshCounter();
+  /* ─── AUTH ───────────────────────────────────────────────────────────────── */
+  auth.onAuthStateChanged(user => {
+    const loginScreen     = document.getElementById('loginScreen');
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (user) {
+      loginScreen.style.display      = 'none';
+      dashboardContent.style.display = '';
+      renderLibrary();
+      refreshCounter();
+    } else {
+      loginScreen.style.display      = 'flex';
+      dashboardContent.style.display = 'none';
+    }
+  });
+
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const email    = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const btn      = document.getElementById('loginBtn');
+    const errEl    = document.getElementById('loginError');
+    errEl.style.display = 'none';
+    btn.disabled = true; btn.textContent = 'Connexion…';
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+    } catch {
+      errEl.textContent = 'Email ou mot de passe incorrect.';
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Se connecter';
+    }
+  });
+
+  document.getElementById('loginPassword').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('loginBtn').click();
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut());
 </script>
 </body>
 </html>
