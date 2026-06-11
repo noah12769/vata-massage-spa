@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Promotions — Vata Massage & Spa</title>
+  <link rel="icon" type="image/png" href="image/favicon.png" />
+  <link rel="apple-touch-icon" href="image/favicon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
@@ -455,24 +457,6 @@
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  function initSampleData() {
-    if (getFlyers().length > 0) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([
-      { id:'d2', title:'Fête des Mères',    image:null, gradientIndex:1, startDate:'2026-05-22', endDate:'2026-06-05',
-        message:'Bonjour, je m\'intéresse à l\'offre Fête des Mères 🌸. Pouvez-vous me contacter ?',
-        archived:false, createdAt:'2026-05-18T10:00:00' },
-      { id:'d3', title:'Rituels d\'Été',    image:null, gradientIndex:2, startDate:'2026-06-01', endDate:'2026-06-30',
-        message:'Bonjour, je souhaite profiter de votre offre "Rituels d\'Été" ☀️. Quelles sont les disponibilités ?',
-        archived:false, createdAt:'2026-05-28T10:00:00' },
-      { id:'d4', title:'Fête des Pères',    image:null, gradientIndex:3, startDate:'2026-06-15', endDate:'2026-06-22',
-        message:'Bonjour, je m\'intéresse à l\'offre Fête des Pères 🎁. Pouvez-vous me contacter ?',
-        archived:false, createdAt:'2026-06-08T10:00:00' },
-      { id:'d5', title:'Pack Été 2026',     image:null, gradientIndex:4, startDate:'2026-07-01', endDate:'2026-08-31',
-        message:'Bonjour, je m\'intéresse à votre offre Pack Été 2026 🌴. Pourriez-vous m\'en dire plus ?',
-        archived:false, createdAt:'2026-06-09T10:00:00' },
-    ]));
-  }
-
   let currentIndex = 0;
   let cards = [];
   let lastNavTime = 0;
@@ -678,8 +662,13 @@
   const pdfFrame    = document.getElementById('pdfFrame');
 
   function openPdfLightbox() {
-    pdfFrame.src = PDF_PATH;
-    pdfLightbox.classList.add('open');
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.open(PDF_PATH, '_blank');
+    } else {
+      pdfFrame.src = PDF_PATH;
+      pdfLightbox.classList.add('open');
+    }
   }
   function closePdfLightbox() {
     pdfLightbox.classList.remove('open');
@@ -692,7 +681,6 @@
     if (e.key === 'Escape') { closeLightbox(); closePdfLightbox(); }
   });
 
-  initSampleData();
   buildCarousel();
 </script>
 </body>
