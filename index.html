@@ -277,29 +277,31 @@
     /* ── LIGHTBOX PDF ── */
     .pdf-lightbox {
       position: fixed; inset: 0; z-index: 210;
-      background: #000;
+      background: #111;
+      display: flex; flex-direction: column;
       opacity: 0; pointer-events: none;
-      transition: opacity .3s ease;
+      transition: opacity .32s ease;
     }
     .pdf-lightbox.open { opacity: 1; pointer-events: all; }
-    .pdf-inner {
-      position: absolute; inset: 0;
-      overflow: hidden;
-      transform: scale(.94);
-      transition: transform .38s cubic-bezier(.34,1.2,.64,1);
+    /* Barre au-dessus de l'iframe — bouton hors de la zone iframe → touch iOS OK */
+    .pdf-bar {
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: flex-end;
+      height: calc(52px + env(safe-area-inset-top, 0px));
+      padding: env(safe-area-inset-top, 0px) 1rem 0;
+      background: #1e5a40;
     }
-    .pdf-lightbox.open .pdf-inner { transform: scale(1); }
-    .pdf-inner iframe { width: 100%; height: 100%; border: none; display: block; }
     .pdf-close {
-      position: fixed; top: max(.9rem, env(safe-area-inset-top, .9rem)); right: .9rem; z-index: 220;
-      width: 42px; height: 42px; border-radius: 50%;
-      background: rgba(0,0,0,.75); border: 1px solid rgba(255,255,255,.28);
-      color: #fff; font-size: 1rem; cursor: pointer;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.28);
+      color: #fff; font-size: 1.1rem; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: background .2s;
       -webkit-tap-highlight-color: transparent;
     }
-    .pdf-close:hover { background: rgba(0,0,0,.95); }
+    .pdf-close:hover { background: rgba(255,255,255,.32); }
+    .pdf-body { flex: 1; overflow: hidden; min-height: 0; }
+    .pdf-body iframe { width: 100%; height: 100%; border: none; display: block; }
 
     /* ── RESPONSIVE ── */
     @media (max-width: 900px) {
@@ -403,20 +405,17 @@
 <div class="lightbox" id="lightbox">
   <div class="lightbox-inner" id="lightboxInner">
     <div class="lightbox-bg" id="lightboxBg"></div>
-    <div class="lightbox-ov" id="lightboxOv"></div>
-    <div class="lightbox-info">
-      <div class="lightbox-title" id="lightboxTitle"></div>
-      <div class="lightbox-dates" id="lightboxDates"></div>
-    </div>
     <button class="lightbox-close" id="lightboxClose">✕</button>
   </div>
 </div>
 
 <!-- Lightbox PDF menu -->
 <div class="pdf-lightbox" id="pdfLightbox">
-  <div class="pdf-inner">
-    <iframe id="pdfFrame" src="" title="Menu Vata Massage & Spa"></iframe>
+  <div class="pdf-bar">
     <button class="pdf-close" id="pdfClose">✕</button>
+  </div>
+  <div class="pdf-body">
+    <iframe id="pdfFrame" src="" title="Menu Vata Massage & Spa"></iframe>
   </div>
 </div>
 
@@ -652,9 +651,6 @@
   /* ── LIGHTBOX IMAGE ── */
   const lightbox      = document.getElementById('lightbox');
   const lightboxBg    = document.getElementById('lightboxBg');
-  const lightboxOv    = document.getElementById('lightboxOv');
-  const lightboxTitle = document.getElementById('lightboxTitle');
-  const lightboxDates = document.getElementById('lightboxDates');
   const lightboxInner = document.getElementById('lightboxInner');
 
   function openLightbox(flyer, status) {
@@ -669,10 +665,8 @@
     }
     let shimmer = lightboxInner.querySelector('.card-shimmer');
     if (status === 'upcoming') {
-      if (!shimmer) { shimmer = document.createElement('div'); shimmer.className = 'card-shimmer'; lightboxInner.insertBefore(shimmer, lightboxOv); }
+      if (!shimmer) { shimmer = document.createElement('div'); shimmer.className = 'card-shimmer'; lightboxInner.appendChild(shimmer); }
     } else { if (shimmer) shimmer.remove(); }
-    lightboxTitle.textContent = flyer.title;
-    lightboxDates.textContent = `Du ${formatDate(flyer.startDate)} au ${formatDate(flyer.endDate)}`;
     lightbox.classList.add('open');
   }
   function closeLightbox() { lightbox.classList.remove('open'); }
