@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Vata Massage & Spa</title>
+  <link rel="icon" type="image/png" href="image/favicon.png" />
+  <link rel="apple-touch-icon" href="image/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      min-height: 100dvh;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #1e5a40;
+      display: flex; align-items: center; justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .login-wrap {
+      display: flex; flex-direction: column; align-items: center; gap: 2rem;
+      width: 100%; max-width: 360px;
+    }
+
+    .login-logo { height: 72px; width: auto; }
+
+    .login-brand {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.05rem; font-weight: 300; color: rgba(255,255,255,.65);
+      text-align: center; letter-spacing: .08em;
+    }
+    .login-brand strong {
+      display: block; font-size: 1.4rem; font-weight: 400; color: #fff;
+      margin-bottom: .15rem;
+    }
+
+    .login-card {
+      background: #fff; border-radius: 18px;
+      padding: 2rem 2.2rem;
+      width: 100%;
+      display: flex; flex-direction: column; gap: 1.1rem;
+    }
+
+    .login-card h2 {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.4rem; font-weight: 300; color: #1a1a1a;
+    }
+
+    .field { display: flex; flex-direction: column; gap: .45rem; }
+    .field label {
+      font-size: .62rem; letter-spacing: .18em; text-transform: uppercase;
+      color: rgba(0,0,0,.45); font-weight: 500;
+    }
+    .field input {
+      background: rgba(0,0,0,.04); border: 1px solid rgba(0,0,0,.1);
+      border-radius: 8px; color: #1a1a1a;
+      font-family: 'Inter', sans-serif; font-size: .9rem;
+      padding: .75rem 1rem; outline: none; width: 100%;
+      transition: border-color .2s;
+      -webkit-text-security: disc;
+    }
+    .field input:focus { border-color: #1e5a40; }
+
+    .btn-login {
+      background: #1e5a40; color: #fff; border: none;
+      border-radius: 100px; padding: .9rem 2rem;
+      font-family: 'Inter', sans-serif;
+      font-size: .74rem; letter-spacing: .18em; text-transform: uppercase;
+      font-weight: 500; cursor: pointer; width: 100%;
+      transition: background .2s;
+    }
+    .btn-login:hover { background: #134530; }
+    .btn-login:disabled { background: rgba(0,0,0,.1); color: rgba(0,0,0,.3); cursor: default; }
+
+    .login-error {
+      display: none; color: #c94040; font-size: .78rem;
+      text-align: center; padding: .5rem; border-radius: 6px;
+      background: rgba(201,64,64,.08);
+    }
+
+    .back-link {
+      font-size: .65rem; letter-spacing: .12em; text-transform: uppercase;
+      color: rgba(255,255,255,.45); text-decoration: none;
+      transition: color .2s;
+    }
+    .back-link:hover { color: rgba(255,255,255,.8); }
+  </style>
+</head>
+<body>
+
+<div class="login-wrap">
+  <img src="image/logo.png" alt="Vata" class="login-logo" />
+
+  <div class="login-brand">
+    <strong>Vata Massage & Spa</strong>
+    Espace administrateur
+  </div>
+
+  <div class="login-card">
+    <h2>Connexion</h2>
+    <div class="field">
+      <label for="pwd">Mot de passe</label>
+      <input type="password" id="pwd" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <div class="login-error" id="loginError">Mot de passe incorrect.</div>
+    <button class="btn-login" id="loginBtn">Se connecter</button>
+  </div>
+
+  <a href="index.html" class="back-link">← Retour au site</a>
+</div>
+
+<script>
+  const ADMIN_PASSWORD = 'VITA027';
+
+  function tryLogin() {
+    const pwd = document.getElementById('pwd').value;
+    const err = document.getElementById('loginError');
+    const btn = document.getElementById('loginBtn');
+
+    if (!pwd) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Vérification…';
+
+    setTimeout(() => {
+      if (pwd === ADMIN_PASSWORD) {
+        sessionStorage.setItem('vata_admin', '1');
+        window.location.href = 'dashboard.html';
+      } else {
+        err.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Se connecter';
+        document.getElementById('pwd').value = '';
+        document.getElementById('pwd').focus();
+      }
+    }, 400);
+  }
+
+  document.getElementById('loginBtn').addEventListener('click', tryLogin);
+  document.getElementById('pwd').addEventListener('keydown', e => {
+    if (e.key === 'Enter') tryLogin();
+  });
+</script>
+</body>
+</html>

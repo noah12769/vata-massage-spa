@@ -143,6 +143,7 @@
     .badge-active  { background: rgba(30,77,59,.9);   color: #fff; border: 1px solid rgba(255,255,255,.16); }
     .badge-expired { background: rgba(35,35,35,.95);   color: rgba(255,255,255,.38); border: 1px solid rgba(255,255,255,.07); }
     .badge-upcoming{ background: rgba(58,122,94,.88);  color: #fff; border: 1px solid rgba(255,255,255,.14); }
+    .badge-soon    { background: rgba(184,145,60,.9);  color: #fff; border: 1px solid rgba(255,255,255,.2); }
     .badge-menu    { background: rgba(255,255,255,.15); color: rgba(255,255,255,.82); border: 1px solid rgba(255,255,255,.22); }
 
     .card--expired  .card-bg { filter: grayscale(1) brightness(.48); }
@@ -165,19 +166,20 @@
     }
 
     /* Carte bientôt */
-    .card--soon .card-overlay { background: linear-gradient(to top, rgba(0,0,0,.5) 0%, transparent 50%); }
+    .card--soon .card-bg     { background: #fff !important; }
+    .card--soon .card-overlay { display: none; }
     .card-soon-body {
       position: absolute; inset: 0;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: .6rem; padding-bottom: 2rem;
     }
     .card-soon-body svg {
-      width: 34px; height: 34px; stroke: rgba(255,255,255,.5); fill: none;
+      width: 34px; height: 34px; stroke: rgba(0,0,0,.22); fill: none;
       stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round;
     }
     .card-soon-label {
       font-size: .52rem; letter-spacing: .28em; text-transform: uppercase;
-      color: rgba(255,255,255,.38);
+      color: rgba(0,0,0,.28);
     }
 
     .card-zoom-hint {
@@ -365,7 +367,7 @@
 
   <!-- NAVBAR -->
   <nav class="top-nav">
-    <a href="dashboard.html" class="admin-btn">
+    <a href="admin.html" class="admin-btn">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
       Admin
     </a>
@@ -437,35 +439,15 @@
   </div>
 </div>
 
+<script src="flyers.js"></script>
 <script>
-  const WHATSAPP_NUMBER = '33690275697';
+  const WHATSAPP_NUMBER = '590090275697';
   const NAV_COOLDOWN    = 380;
   const PDF_PATH        = 'Vata%202025.pdf';
 
   const MENU_CARD = { id: '__menu__', type: 'menu' };
 
-  // ─── FLYERS ── Ajouter un nouveau flyer : copier un bloc ci-dessous ────────
-  const FLYERS = [
-    {
-      id: 'fete-des-meres-2026',
-      title: 'Fête des Mères',
-      image: 'flyers/fete-des-meres.jpg',
-      startDate: '2026-05-16',
-      endDate:   '2026-06-07',
-      message:   'Bonjour, je suis intéressé(e) par votre offre spéciale Fête des Mères 🌸. Pourriez-vous me contacter pour plus d\'informations ?'
-    },
-    {
-      id: 'fete-des-peres-2026',
-      title: 'Fête des Pères',
-      image: 'flyers/fete-des-peres.png',
-      startDate: '2026-06-01',
-      endDate:   '2026-06-21',
-      message:   'Bonjour, je suis intéressé(e) par votre offre spéciale Fête des Pères 🎁. Pourriez-vous me contacter pour plus d\'informations ?'
-    },
-    { id: 'soon-1', type: 'soon', gradientIndex: 2 },
-    { id: 'soon-2', type: 'soon', gradientIndex: 4 },
-  ];
-  // ──────────────────────────────────────────────────────────────────────────
+  // FLYERS est défini dans flyers.js (chargé avant ce script)
 
   const CARD_COLORS = [
     '#0f2a20', '#0f1e2d', '#1a1208', '#0d2d2b', '#1e0d30', '#1c220a',
@@ -528,9 +510,9 @@
       } else if (flyer.type === 'soon') {
         card.className = 'flyer-card card--soon';
         card.innerHTML = `
-          <div class="card-bg" style="background:${CARD_COLORS[flyer.gradientIndex ?? 0]}"></div>
+          <div class="card-bg" style="background:#fff"></div>
           <div class="card-overlay"></div>
-          <span class="card-badge badge-upcoming">Bientôt</span>
+          <span class="card-badge badge-soon">Bientôt</span>
           <div class="card-soon-body">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
             <span class="card-soon-label">Promo à venir</span>
