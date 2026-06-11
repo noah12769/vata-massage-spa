@@ -315,6 +315,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 </head>
 <body>
 
@@ -362,7 +363,7 @@
           <div class="upload-zone" id="uploadZone">
             <input type="file" id="fileInput" accept="image/*" />
             <div class="upload-icon">🖼</div>
-            <p><strong>Cliquer pour choisir</strong><br>ou glisser-déposer une image<br><small>JPG, PNG — max 10 Mo</small></p>
+            <p><strong>Cliquer pour choisir</strong><br>ou glisser-déposer une image<br><small>JPG, PNG — max 15 Mo</small></p>
           </div>
           <div id="uploadProgress" style="display:none;margin-top:.6rem;">
             <div class="upload-progress"><div class="upload-progress-bar" id="uploadProgressBar"></div></div>
@@ -444,8 +445,9 @@
     appId:             '1:494746429610:web:e99dd435937403e10248d3'
   };
   firebase.initializeApp(firebaseConfig);
-  const db   = firebase.firestore();
-  const auth = firebase.auth();
+  const db      = firebase.firestore();
+  const auth    = firebase.auth();
+  const storage = firebase.storage();
 
   /* ─── CONFIG ─────────────────────────────────────────────────────────────── */
   const MAX_CAROUSEL = 5;
@@ -499,13 +501,10 @@
     t.textContent = msg;
     t.className   = 'toast show' + (isError ? ' error' : '');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { t.className = 'toast'; }, 3200);
+    toastTimer = setTimeout(() => { t.className = 'toast'; }, isError ? 6000 : 3200);
   }
 
-  /* ─── CLOUDINARY UPLOAD ─────────────────────────────────────────────────── */
-  const CLOUDINARY_CLOUD  = 'dygrapvoi';
-  const CLOUDINARY_PRESET = 'Noah Victor';
-
+  /* ─── FIREBASE STORAGE UPLOAD ───────────────────────────────────────────── */
   let pendingImageUrl  = null;
   let uploadInProgress = false;
 
@@ -524,34 +523,30 @@
     reader.readAsDataURL(file);
   }
 
-  function uploadToCloudinary(file, onProgress) {
+  function uploadToStorage(file, onProgress) {
     return new Promise((resolve, reject) => {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('upload_preset', CLOUDINARY_PRESET);
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`);
-      xhr.upload.addEventListener('progress', e => {
-        if (e.lengthComputable) onProgress(Math.round(e.loaded / e.total * 100));
-      });
-      xhr.addEventListener('load', () => {
-        if (xhr.status === 200) {
-          resolve(JSON.parse(xhr.responseText).secure_url);
-        } else {
+      const ext = file.name.split('.').pop().toLowerCase();
+      const ref  = storage.ref(`flyers/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`);
+      const task = ref.put(file);
+      task.on('state_changed',
+        snap => {
+          const pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
+          onProgress(pct);
+        },
+        err => reject(err),
+        async () => {
           try {
-            const err = JSON.parse(xhr.responseText);
-            reject(new Error(err.error?.message || 'Erreur ' + xhr.status));
-          } catch { reject(new Error('Erreur ' + xhr.status)); }
+            const url = await task.snapshot.ref.getDownloadURL();
+            resolve(url);
+          } catch (e) { reject(e); }
         }
-      });
-      xhr.addEventListener('error', () => reject(new Error('Erreur réseau')));
-      xhr.send(fd);
+      );
     });
   }
 
   async function handleFile(file) {
     if (!file.type.startsWith('image/')) { showToast('Format non supporté.', true); return; }
-    if (file.size > 10 * 1024 * 1024) { showToast('Image trop lourde (max 10 Mo).', true); return; }
+    if (file.size > 15 * 1024 * 1024) { showToast('Image trop lourde (max 15 Mo).', true); return; }
     pendingImageUrl = null;
     showPreview(file);
 
@@ -564,7 +559,7 @@
     uploadInProgress   = true;
 
     try {
-      pendingImageUrl = await uploadToCloudinary(file, pct => {
+      pendingImageUrl = await uploadToStorage(file, pct => {
         bar.style.width = pct + '%';
         txt.textContent = `Upload ${pct}%…`;
       });
@@ -573,7 +568,10 @@
       txt.textContent      = '✓ Image prête';
       setTimeout(() => { progressWrap.style.display = 'none'; }, 1800);
     } catch (e) {
-      showToast('Upload : ' + (e.message || 'Erreur inconnue'), true);
+      const msg = e.code === 'storage/unauthorized'
+        ? 'Accès refusé — règles Firebase Storage à configurer.'
+        : (e.message || 'Erreur inconnue');
+      showToast('Upload : ' + msg, true);
       progressWrap.style.display = 'none';
       pendingImageUrl = null;
     } finally {
@@ -655,7 +653,10 @@
       await refreshCounter();
       showToast('✓ Flyer publié avec succès !');
     } catch (e) {
-      showToast('Erreur lors de la publication. Réessayez.', true);
+      const msg = e.code === 'permission-denied'
+        ? 'Accès refusé — vérifie les règles Firestore.'
+        : (e.message || 'Erreur inconnue');
+      showToast('Publication : ' + msg, true);
       console.error(e);
     } finally {
       btn.disabled = false;
