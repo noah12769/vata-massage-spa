@@ -11,13 +11,13 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --bg:     #f5f3f0;
+      --bg:     #3a9a78;
       --surface:#ffffff;
-      --border: rgba(0,0,0,.09);
+      --border: rgba(0,0,0,.1);
       --cream:  #1a1a1a;
-      --gold:   #b8976a;
-      --teal:   #2d6b68;
-      --teal-h: #235553;
+      --gold:   #3a9a78;
+      --teal:   #1e5a40;
+      --teal-h: #134530;
       --danger: #c94040;
       --text:   rgba(0,0,0,.78);
       --muted:  rgba(0,0,0,.42);
@@ -34,30 +34,30 @@
     .topbar {
       display: flex; align-items: center; justify-content: space-between;
       padding: 1rem 2.4rem;
-      background: rgba(255,255,255,.95); backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
+      background: #1e5a40;
+      border-bottom: 1px solid rgba(255,255,255,.12);
       position: sticky; top: 0; z-index: 50;
     }
     .topbar__logo { display: flex; align-items: center; gap: 1rem; }
-    .topbar__logo-text { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.3rem; font-weight: 300; letter-spacing: .22em; text-transform: uppercase; color: rgba(0,0,0,.4); }
+    .topbar__logo-img { height: 36px; width: auto; }
     .topbar__title {
       font-family: 'Cormorant Garamond', Georgia, serif;
       font-size: 1.1rem; font-weight: 300; letter-spacing: .04em;
-      color: var(--cream);
+      color: #fff;
     }
     .topbar__title small {
       display: block; font-size: .58rem; letter-spacing: .22em;
-      text-transform: uppercase; color: rgba(0,0,0,.45); margin-bottom: .12rem;
+      text-transform: uppercase; color: rgba(255,255,255,.55); margin-bottom: .12rem;
     }
     .btn-back {
       display: inline-flex; align-items: center; gap: .5rem;
       padding: .5rem 1.1rem; border-radius: 100px;
-      border: none; background: #1a1a1a;
+      border: none; background: rgba(255,255,255,.15);
       color: #fff; font-size: .7rem; letter-spacing: .12em;
       text-transform: uppercase; text-decoration: none;
       transition: background .2s;
     }
-    .btn-back:hover { background: #000; }
+    .btn-back:hover { background: rgba(255,255,255,.25); }
 
     /* ── LAYOUT ── */
     .main {
@@ -68,10 +68,10 @@
 
     .section-label {
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 1.6rem; font-weight: 300; color: var(--cream);
+      font-size: 1.6rem; font-weight: 300; color: #fff;
       margin-bottom: 1.5rem;
     }
-    .section-label span { color: rgba(0,0,0,.55); font-style: italic; }
+    .section-label span { color: rgba(255,255,255,.7); font-style: italic; }
 
     /* ── FORM CARD ── */
     .form-card {
@@ -129,22 +129,22 @@
     /* Upload zone */
     .upload-zone {
       position: relative;
-      border: 1.5px dashed rgba(184,151,106,.35);
+      border: 1.5px dashed rgba(30,90,64,.35);
       border-radius: 12px;
       padding: 2rem 1rem;
       text-align: center;
       cursor: pointer;
       transition: border-color .25s, background .25s;
-      background: rgba(255,255,255,.03);
+      background: rgba(0,0,0,.02);
       overflow: hidden;
     }
     .upload-zone:hover,
     .upload-zone.drag-over {
-      border-color: var(--gold);
-      background: rgba(184,151,106,.06);
+      border-color: var(--teal);
+      background: rgba(30,90,64,.06);
     }
     .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-    .upload-icon { font-size: 1.5rem; margin-bottom: .5rem; color: var(--gold); }
+    .upload-icon { font-size: 1.5rem; margin-bottom: .5rem; color: var(--teal); }
     .upload-zone p { font-size: .78rem; color: var(--muted); line-height: 1.5; }
     .upload-zone p strong { color: var(--cream); font-weight: 500; }
 
@@ -258,8 +258,8 @@
     .lib-section-title {
       grid-column: 1 / -1;
       font-size: .62rem; letter-spacing: .22em; text-transform: uppercase;
-      color: var(--gold); padding: .2rem 0 .4rem;
-      border-bottom: 1px solid rgba(184,151,106,.2);
+      color: #fff; padding: .2rem 0 .4rem;
+      border-bottom: 1px solid rgba(255,255,255,.2);
       margin-bottom: .2rem;
     }
     .lib-section-sub {
@@ -279,13 +279,13 @@
       display: inline-flex; align-items: center; gap: .4rem;
       font-family: 'Inter', sans-serif;
       font-size: .68rem; letter-spacing: .1em; text-transform: uppercase;
-      color: rgba(0,0,0,.55); text-decoration: none;
+      color: rgba(255,255,255,.65); text-decoration: none;
       transition: color .2s;
     }
-    .btn-history:hover { color: #000; }
+    .btn-history:hover { color: #fff; }
 
     /* ── SEPARATOR ── */
-    .sep { height: 1px; background: var(--border); }
+    .sep { height: 1px; background: rgba(255,255,255,.18); }
 
     /* ── RESPONSIVE ── */
     @media (max-width: 640px) {
@@ -302,7 +302,7 @@
 <!-- TOPBAR -->
 <header class="topbar">
   <div class="topbar__logo">
-    <span class="topbar__logo-text">LOGO</span>
+    <img src="image/logo.png" alt="Vata" class="topbar__logo-img" />
     <div class="topbar__title">
       <small>Tableau de bord</small>
       Gestion des promotions

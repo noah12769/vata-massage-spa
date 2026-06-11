@@ -74,10 +74,10 @@
     .eyebrow-row__text { font-size: .54rem; letter-spacing: .26em; text-transform: uppercase; color: rgba(255,255,255,.6); }
 
     .promo-title {
-      font-size: clamp(1.9rem, 5vw, 4rem);
-      font-weight: 300; line-height: .95; color: #fff; letter-spacing: -.01em;
+      font-size: clamp(2.5rem, 7vw, 4.5rem);
+      font-weight: 400; line-height: .95; color: #fff; letter-spacing: -.01em;
     }
-    .promo-title em { font-style: italic; color: rgba(255,255,255,.85); }
+    .promo-title em { font-style: italic; color: #fff; }
 
     /* ── CARROUSEL ── */
     .stack-section {
@@ -668,10 +668,10 @@
 
   function openLightbox(flyer, status) {
     if (flyer.image) {
+      lightboxBg.style.background         = '';
       lightboxBg.style.backgroundImage    = `url('${flyer.image}')`;
       lightboxBg.style.backgroundSize     = 'cover';
       lightboxBg.style.backgroundPosition = 'center';
-      lightboxBg.style.background         = '';
     } else {
       lightboxBg.style.backgroundImage = '';
       lightboxBg.style.background = CARD_COLORS[flyer.gradientIndex ?? 0];
@@ -693,6 +693,10 @@
   const pdfFrame    = document.getElementById('pdfFrame');
 
   function openPdfLightbox() {
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      window.open(PDF_PATH, '_blank');
+      return;
+    }
     pdfFrame.src = PDF_PATH;
     pdfLightbox.classList.add('open');
   }
