@@ -294,12 +294,13 @@
     .pdf-lightbox.open .pdf-inner { transform: scale(1); }
     .pdf-inner iframe { width: 100%; height: 100%; border: none; display: block; }
     .pdf-close {
-      position: absolute; top: .8rem; right: .8rem; z-index: 5;
-      width: 34px; height: 34px; border-radius: 50%;
-      background: rgba(0,0,0,.72); border: 1px solid rgba(255,255,255,.25);
-      color: #fff; font-size: .82rem; cursor: pointer;
+      position: fixed; top: max(.9rem, env(safe-area-inset-top, .9rem)); right: .9rem; z-index: 220;
+      width: 42px; height: 42px; border-radius: 50%;
+      background: rgba(0,0,0,.75); border: 1px solid rgba(255,255,255,.28);
+      color: #fff; font-size: 1rem; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: background .2s;
+      -webkit-tap-highlight-color: transparent;
     }
     .pdf-close:hover { background: rgba(0,0,0,.95); }
 
@@ -512,9 +513,6 @@
         card.innerHTML = `
           <div class="card-bg" style="background-image:url('image/menu-cover.png');background-size:cover;background-position:center top"></div>
           <div class="card-overlay"></div>
-          <div class="card-content">
-            <div class="card-title">Carte des Soins</div>
-          </div>
           <span class="card-badge badge-menu">Menu</span>
           <div class="card-zoom-hint">
             <svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
@@ -533,10 +531,6 @@
           <div class="card-bg" style="${bgStyle}"></div>
           ${status === 'upcoming' ? '<div class="card-shimmer"></div>' : ''}
           <div class="card-overlay"></div>
-          <div class="card-content">
-            <div class="card-title">${esc(flyer.title)}</div>
-            <div class="card-dates">${formatDate(flyer.startDate)} — ${formatDate(flyer.endDate)}</div>
-          </div>
           <span class="card-badge badge-${status}">${labels[status]}</span>
           <div class="card-zoom-hint">
             <svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><line x1="14.5" y1="14.5" x2="20" y2="20"/><line x1="10" y1="7" x2="10" y2="13"/><line x1="7" y1="10" x2="13" y2="10"/></svg>
@@ -693,10 +687,6 @@
   const pdfFrame    = document.getElementById('pdfFrame');
 
   function openPdfLightbox() {
-    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-      window.open(PDF_PATH, '_blank');
-      return;
-    }
     pdfFrame.src = PDF_PATH;
     pdfLightbox.classList.add('open');
   }
