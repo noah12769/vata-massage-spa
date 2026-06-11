@@ -300,7 +300,6 @@
   </style>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 </head>
 <body>
@@ -345,18 +344,16 @@
     <div class="form-card">
       <div class="form-grid">
 
-        <!-- Upload image -->
+        <!-- Image URL -->
         <div class="form-group">
-          <label>Photo du flyer</label>
-          <div class="upload-zone" id="uploadZone">
-            <input type="file" id="fileInput" accept="image/*" />
-            <div class="upload-icon">🖼</div>
-            <p><strong>Cliquer pour choisir</strong><br>ou glisser-déposer une image<br><small style="color:rgba(255,255,255,.25)">JPG, PNG — max 5 Mo</small></p>
-          </div>
-          <div class="preview-wrap" id="previewWrap">
+          <label>URL de l'image du flyer</label>
+          <input type="url" id="flyerImage" placeholder="https://i.ibb.co/…" />
+          <div class="preview-wrap" id="previewWrap" style="margin-top:.8rem;">
             <img id="previewImg" src="" alt="Aperçu" />
-            <button class="preview-remove" id="removeImg" title="Supprimer l'image">✕</button>
           </div>
+          <small style="font-size:.62rem;color:rgba(0,0,0,.42);margin-top:.5rem;display:block;line-height:1.5;">
+            Upload gratuit sur <a href="https://imgbb.com" target="_blank" rel="noopener" style="color:inherit;font-weight:500;">imgbb.com</a>, puis copie le lien direct.
+          </small>
         </div>
 
         <!-- Infos flyer -->
@@ -430,9 +427,8 @@
     appId:             'REMPLACE_MOI'
   };
   firebase.initializeApp(firebaseConfig);
-  const db      = firebase.firestore();
-  const storage = firebase.storage();
-  const auth    = firebase.auth();
+  const db   = firebase.firestore();
+  const auth = firebase.auth();
 
   /* ─── CONFIG ─────────────────────────────────────────────────────────────── */
   const MAX_CAROUSEL = 5;
@@ -489,61 +485,19 @@
     toastTimer = setTimeout(() => { t.className = 'toast'; }, 3200);
   }
 
-  /* ─── IMAGE UPLOAD ───────────────────────────────────────────────────────── */
-  let pendingImage = null; // { dataUrl, blob } ou null
-
-  const uploadZone  = document.getElementById('uploadZone');
-  const fileInput   = document.getElementById('fileInput');
+  /* ─── APERÇU IMAGE URL ───────────────────────────────────────────────────── */
   const previewWrap = document.getElementById('previewWrap');
   const previewImg  = document.getElementById('previewImg');
 
-  function processImage(file, maxW, maxH, quality) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const img = new Image();
-        img.onload = () => {
-          let w = img.width, h = img.height;
-          const ratio = Math.min(maxW / w, maxH / h, 1);
-          w = Math.round(w * ratio); h = Math.round(h * ratio);
-          const canvas = document.createElement('canvas');
-          canvas.width = w; canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          const dataUrl = canvas.toDataURL('image/jpeg', quality);
-          canvas.toBlob(blob => {
-            if (!blob) { reject(new Error('toBlob failed')); return; }
-            resolve({ dataUrl, blob });
-          }, 'image/jpeg', quality);
-        };
-        img.onerror = reject;
-        img.src = e.target.result;
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
-
-  async function handleFile(file) {
-    if (!file.type.startsWith('image/')) { showToast('Format non supporté.', true); return; }
-    if (file.size > 5 * 1024 * 1024) { showToast('Image trop lourde (max 5 Mo).', true); return; }
-    try {
-      pendingImage = await processImage(file, 800, 1200, 0.82);
-      previewImg.src = pendingImage.dataUrl;
+  document.getElementById('flyerImage').addEventListener('input', () => {
+    const url = document.getElementById('flyerImage').value.trim();
+    if (url) {
+      previewImg.src = url;
       previewWrap.classList.add('visible');
-      uploadZone.style.display = 'none';
-    } catch { showToast('Erreur lors du chargement de l\'image.', true); }
-  }
-
-  fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
-  uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
-  uploadZone.addEventListener('dragleave', ()  => uploadZone.classList.remove('drag-over'));
-  uploadZone.addEventListener('drop', e => {
-    e.preventDefault(); uploadZone.classList.remove('drag-over');
-    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
-  });
-  document.getElementById('removeImg').addEventListener('click', () => {
-    pendingImage = null; previewImg.src = '';
-    previewWrap.classList.remove('visible'); uploadZone.style.display = ''; fileInput.value = '';
+    } else {
+      previewImg.src = '';
+      previewWrap.classList.remove('visible');
+    }
   });
 
   /* ─── AUTO-MESSAGE ───────────────────────────────────────────────────────── */
@@ -585,12 +539,7 @@
       const gradientIdx = all.length % GRADIENTS.length;
       const flyerId = uid();
 
-      let imageUrl = null;
-      if (pendingImage) {
-        const ref = storage.ref(`flyers/${flyerId}/image.jpg`);
-        await ref.put(pendingImage.blob);
-        imageUrl = await ref.getDownloadURL();
-      }
+      const imageUrl = document.getElementById('flyerImage').value.trim() || null;
 
       await db.collection('flyers').doc(flyerId).set({
         title, image: imageUrl, gradientIndex: gradientIdx,
@@ -624,8 +573,9 @@
     document.getElementById('startDate').value  = '';
     document.getElementById('endDate').value    = '';
     document.getElementById('waMessage').value  = '';
-    pendingImage = null; previewImg.src = '';
-    previewWrap.classList.remove('visible'); uploadZone.style.display = ''; fileInput.value = '';
+    document.getElementById('flyerImage').value = '';
+    previewImg.src = '';
+    previewWrap.classList.remove('visible');
   }
 
   /* ─── BIBLIOTHÈQUE ───────────────────────────────────────────────────────── */
@@ -682,7 +632,6 @@
   async function deleteFlyer(id) {
     if (!confirm('Supprimer ce flyer définitivement ?')) return;
     try {
-      try { await storage.ref(`flyers/${id}/image.jpg`).delete(); } catch (_) {}
       await db.collection('flyers').doc(id).delete();
       await renderLibrary(); await refreshCounter();
       showToast('Flyer supprimé.');
