@@ -477,19 +477,23 @@
   let lastNavTime = 0;
 
   async function buildCarousel() {
+    // Affiche le menu immédiatement sans attendre Firebase
+    cards = [MENU_CARD];
+    currentIndex = 0;
+    renderCards(); renderDots(); updateCTA(); updateArrows();
+
+    // Charge les promos depuis Firebase en arrière-plan
     const promos = (await getFlyers())
       .filter(f => !f.archived)
       .sort((a, b) => a.startDate.localeCompare(b.startDate));
-    cards = [MENU_CARD, ...promos];
 
+    if (promos.length === 0) return;
+
+    cards = [MENU_CARD, ...promos];
     const firstActive   = cards.findIndex((f, i) => i > 0 && getStatus(f) === 'active');
     const firstUpcoming = cards.findIndex((f, i) => i > 0 && getStatus(f) === 'upcoming');
     currentIndex = firstActive >= 0 ? firstActive : firstUpcoming >= 0 ? firstUpcoming : 0;
-
-    renderCards();
-    renderDots();
-    updateCTA();
-    updateArrows();
+    renderCards(); renderDots(); updateCTA(); updateArrows();
   }
 
   function renderCards() {
@@ -645,7 +649,6 @@
   }, { passive: true });
   document.getElementById('prevBtn').addEventListener('click', () => navigate(-1));
   document.getElementById('nextBtn').addEventListener('click', () => navigate(1));
-  window.addEventListener('storage', e => { if (e.key === STORAGE_KEY) buildCarousel(); });
 
   /* ── LIGHTBOX IMAGE ── */
   const lightbox      = document.getElementById('lightbox');
