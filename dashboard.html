@@ -168,6 +168,20 @@
     }
     .preview-remove:hover { background: var(--danger); }
 
+    /* Barre de progression upload */
+    .upload-progress {
+      margin-top: .6rem; border-radius: 8px; overflow: hidden;
+      background: rgba(0,0,0,.06); height: 6px; position: relative;
+    }
+    .upload-progress-bar {
+      height: 100%; width: 0; background: var(--teal);
+      transition: width .2s, background .4s;
+      border-radius: 8px;
+    }
+    .upload-progress-text {
+      font-size: .65rem; color: var(--muted); margin-top: .3rem; display: block;
+    }
+
     /* ── PUBLISH BUTTON ── */
     .form-actions {
       grid-column: 1 / -1;
@@ -309,8 +323,6 @@
   <img src="image/logo.png" style="height:80px;width:auto;" alt="Vata" />
   <div style="background:#fff;border-radius:16px;padding:2rem 2.4rem;width:100%;max-width:360px;display:flex;flex-direction:column;gap:1rem;">
     <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:300;font-size:1.5rem;color:#1a1a1a;margin-bottom:.3rem;">Connexion</h2>
-    <input type="email" id="loginEmail" placeholder="Email" autocomplete="username"
-      style="background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.1);border-radius:8px;color:#1a1a1a;font-family:'Inter',sans-serif;font-size:.9rem;padding:.75rem 1rem;outline:none;width:100%;box-sizing:border-box;" />
     <input type="password" id="loginPassword" placeholder="Mot de passe" autocomplete="current-password"
       style="background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.1);border-radius:8px;color:#1a1a1a;font-family:'Inter',sans-serif;font-size:.9rem;padding:.75rem 1rem;outline:none;width:100%;box-sizing:border-box;" />
     <button id="loginBtn" style="background:#1e5a40;color:#fff;border:none;border-radius:100px;padding:.9rem 2rem;font-family:'Inter',sans-serif;font-size:.76rem;letter-spacing:.18em;text-transform:uppercase;font-weight:500;cursor:pointer;">Se connecter</button>
@@ -344,16 +356,22 @@
     <div class="form-card">
       <div class="form-grid">
 
-        <!-- Image URL -->
+        <!-- Upload image -->
         <div class="form-group">
-          <label>URL de l'image du flyer</label>
-          <input type="url" id="flyerImage" placeholder="https://i.ibb.co/…" />
-          <div class="preview-wrap" id="previewWrap" style="margin-top:.8rem;">
-            <img id="previewImg" src="" alt="Aperçu" />
+          <label>Photo du flyer</label>
+          <div class="upload-zone" id="uploadZone">
+            <input type="file" id="fileInput" accept="image/*" />
+            <div class="upload-icon">🖼</div>
+            <p><strong>Cliquer pour choisir</strong><br>ou glisser-déposer une image<br><small>JPG, PNG — max 10 Mo</small></p>
           </div>
-          <small style="font-size:.62rem;color:rgba(0,0,0,.42);margin-top:.5rem;display:block;line-height:1.5;">
-            Upload gratuit sur <a href="https://imgbb.com" target="_blank" rel="noopener" style="color:inherit;font-weight:500;">imgbb.com</a>, puis copie le lien direct.
-          </small>
+          <div id="uploadProgress" style="display:none;margin-top:.6rem;">
+            <div class="upload-progress"><div class="upload-progress-bar" id="uploadProgressBar"></div></div>
+            <span class="upload-progress-text" id="uploadProgressText">Upload en cours…</span>
+          </div>
+          <div class="preview-wrap" id="previewWrap">
+            <img id="previewImg" src="" alt="Aperçu" />
+            <button class="preview-remove" id="removeImg" title="Supprimer l'image">✕</button>
+          </div>
         </div>
 
         <!-- Infos flyer -->
@@ -484,19 +502,90 @@
     toastTimer = setTimeout(() => { t.className = 'toast'; }, 3200);
   }
 
-  /* ─── APERÇU IMAGE URL ───────────────────────────────────────────────────── */
+  /* ─── CLOUDINARY UPLOAD ─────────────────────────────────────────────────── */
+  const CLOUDINARY_CLOUD  = 'dygrapvoi';
+  const CLOUDINARY_PRESET = 'Noah Victor';
+
+  let pendingImageUrl  = null;
+  let uploadInProgress = false;
+
+  const uploadZone  = document.getElementById('uploadZone');
+  const fileInput   = document.getElementById('fileInput');
   const previewWrap = document.getElementById('previewWrap');
   const previewImg  = document.getElementById('previewImg');
 
-  document.getElementById('flyerImage').addEventListener('input', () => {
-    const url = document.getElementById('flyerImage').value.trim();
-    if (url) {
-      previewImg.src = url;
+  function showPreview(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      previewImg.src = e.target.result;
       previewWrap.classList.add('visible');
-    } else {
-      previewImg.src = '';
-      previewWrap.classList.remove('visible');
+      uploadZone.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function uploadToCloudinary(file, onProgress) {
+    return new Promise((resolve, reject) => {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('upload_preset', CLOUDINARY_PRESET);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`);
+      xhr.upload.addEventListener('progress', e => {
+        if (e.lengthComputable) onProgress(Math.round(e.loaded / e.total * 100));
+      });
+      xhr.addEventListener('load', () => {
+        if (xhr.status === 200) resolve(JSON.parse(xhr.responseText).secure_url);
+        else reject(new Error('Upload échoué : ' + xhr.status));
+      });
+      xhr.addEventListener('error', () => reject(new Error('Erreur réseau')));
+      xhr.send(fd);
+    });
+  }
+
+  async function handleFile(file) {
+    if (!file.type.startsWith('image/')) { showToast('Format non supporté.', true); return; }
+    if (file.size > 10 * 1024 * 1024) { showToast('Image trop lourde (max 10 Mo).', true); return; }
+    pendingImageUrl = null;
+    showPreview(file);
+
+    const progressWrap = document.getElementById('uploadProgress');
+    const bar          = document.getElementById('uploadProgressBar');
+    const txt          = document.getElementById('uploadProgressText');
+    progressWrap.style.display = 'block';
+    bar.style.width    = '0%';
+    bar.style.background = 'var(--teal)';
+    uploadInProgress   = true;
+
+    try {
+      pendingImageUrl = await uploadToCloudinary(file, pct => {
+        bar.style.width = pct + '%';
+        txt.textContent = `Upload ${pct}%…`;
+      });
+      bar.style.width      = '100%';
+      bar.style.background = '#3a9a78';
+      txt.textContent      = '✓ Image prête';
+      setTimeout(() => { progressWrap.style.display = 'none'; }, 1800);
+    } catch {
+      showToast('Erreur upload. Réessayez.', true);
+      progressWrap.style.display = 'none';
+      pendingImageUrl = null;
+    } finally {
+      uploadInProgress = false;
     }
+  }
+
+  fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+  uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault(); uploadZone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+  document.getElementById('removeImg').addEventListener('click', () => {
+    pendingImageUrl = null;
+    previewImg.src = ''; previewWrap.classList.remove('visible');
+    uploadZone.style.display = ''; fileInput.value = '';
   });
 
   /* ─── AUTO-MESSAGE ───────────────────────────────────────────────────────── */
@@ -538,7 +627,8 @@
       const gradientIdx = all.length % GRADIENTS.length;
       const flyerId = uid();
 
-      const imageUrl = document.getElementById('flyerImage').value.trim() || null;
+      if (uploadInProgress) { showToast('Image en cours d\'upload, patiente…', true); btn.disabled = false; btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg> Publier`; return; }
+      const imageUrl = pendingImageUrl;
 
       await db.collection('flyers').doc(flyerId).set({
         title, image: imageUrl, gradientIndex: gradientIdx,
@@ -572,9 +662,9 @@
     document.getElementById('startDate').value  = '';
     document.getElementById('endDate').value    = '';
     document.getElementById('waMessage').value  = '';
-    document.getElementById('flyerImage').value = '';
-    previewImg.src = '';
-    previewWrap.classList.remove('visible');
+    pendingImageUrl = null;
+    previewImg.src = ''; previewWrap.classList.remove('visible');
+    uploadZone.style.display = ''; fileInput.value = '';
   }
 
   /* ─── BIBLIOTHÈQUE ───────────────────────────────────────────────────────── */
@@ -670,17 +760,18 @@
     }
   });
 
+  const ADMIN_EMAIL = 'admin@vata-massage-spa.fr';
+
   document.getElementById('loginBtn').addEventListener('click', async () => {
-    const email    = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
     const btn      = document.getElementById('loginBtn');
     const errEl    = document.getElementById('loginError');
     errEl.style.display = 'none';
     btn.disabled = true; btn.textContent = 'Connexion…';
     try {
-      await auth.signInWithEmailAndPassword(email, password);
+      await auth.signInWithEmailAndPassword(ADMIN_EMAIL, password);
     } catch {
-      errEl.textContent = 'Email ou mot de passe incorrect.';
+      errEl.textContent = 'Mot de passe incorrect.';
       errEl.style.display = 'block';
       btn.disabled = false; btn.textContent = 'Se connecter';
     }
