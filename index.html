@@ -421,6 +421,36 @@
   </div>
 </div>
 
+<script>
+(function(){
+  var track = document.getElementById('stackTrack');
+  var dots  = document.getElementById('stackDots');
+  if (!track) return;
+  var card = document.createElement('div');
+  card.className = 'flyer-card card--menu';
+  card.dataset.diff  = '0';
+  card.dataset.index = '0';
+  card.innerHTML =
+    '<div class="card-bg" style="background-image:url(\'image/menu-cover.png\');background-size:cover;background-position:center top"></div>' +
+    '<div class="card-overlay"></div>' +
+    '<span class="card-badge badge-menu">Menu</span>' +
+    '<div class="card-zoom-hint"><svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></div>';
+  track.appendChild(card);
+  var dot = document.createElement('button');
+  dot.className = 'dot active';
+  dot.setAttribute('aria-label', 'Carte 1');
+  dots.appendChild(dot);
+  var el;
+  el = document.getElementById('flyerTitle');   if (el) el.textContent = 'Notre Menu';
+  el = document.getElementById('flyerDates');   if (el) el.textContent = 'Soins & Prestations';
+  el = document.getElementById('actionBtn');    if (el) el.className = 'btn-action menu-cta';
+  el = document.getElementById('actionBtnText');if (el) el.textContent = 'Consulter le menu';
+  el = document.getElementById('actionIcon');
+  if (el) { el.setAttribute('viewBox','0 0 24 24'); el.innerHTML = '<path d="M4 6h16M4 10h16M4 14h10M4 18h7"/>'; }
+  el = document.getElementById('prevBtn'); if (el) el.classList.add('edge');
+  el = document.getElementById('nextBtn'); if (el) el.classList.add('edge');
+})();
+</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
